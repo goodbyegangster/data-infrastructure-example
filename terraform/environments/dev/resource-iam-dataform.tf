@@ -2,7 +2,7 @@
 resource "google_project_iam_member" "dataform_service_agent" {
   depends_on = [google_workload_identity_service_agent.dataform_service_agent]
 
-  project = var.project_id
+  project = var.project_id_raw_data
   role    = "roles/dataform.serviceAgent"
   member  = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-dataform.iam.gserviceaccount.com"
 }

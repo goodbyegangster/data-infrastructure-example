@@ -1,1 +1,8 @@
+*.tfstate
+*.tfstate.*
+**/.terraform/*
+**/terraform-backend.tf
+**/terraform.auto.tfvars
 config/*.env
+crash.*.log
+crash.log

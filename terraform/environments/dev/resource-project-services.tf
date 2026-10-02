@@ -8,7 +8,7 @@ resource "google_project_service" "workload" {
     "workloadidentity.googleapis.com",
   ])
 
-  project = var.project_id
+  project = var.project_id_raw_data
   service = each.value
 
   disable_on_destroy = false

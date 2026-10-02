@@ -29,7 +29,7 @@ hogehoge。
 
 ### (1)
 
-作成した env ファイルを基に、Terraform backend と vars ファイルを作成する。
+作成した env ファイルを基に、Terraform backend と tfvars ファイルを作成する。
 
 ```sh
 make terraform-configure

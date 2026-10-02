@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# env ファイルから対象環境の Terraform backend と vars ファイルを生成する。
+# env ファイルから対象環境の Terraform backend と tfvars ファイルを生成する。
 #
 # Requirement Bash Version
 #   GNU Bash 4.4 or later
@@ -92,7 +92,7 @@ write_backend_configuration() {
 	move_generated_file "${temporary_file}" "${TERRAFORM_BACKEND_FILE}" "Terraform backend"
 }
 
-# Terraform vars ファイルを生成する。
+# Terraform tfvars ファイルを生成する。
 write_variable_values() {
 	local temporary_file
 
@@ -116,13 +116,14 @@ write_variable_values() {
 	move_generated_file "${temporary_file}" "${TERRAFORM_VARIABLES_FILE}" "Terraform variables"
 }
 
-# Terraform 各種ファイルの作成パスを設定する。
+# Terraform 設定ファイルの作成パスを設定する。
 derive_terraform_paths() {
 	TERRAFORM_ROOT_DIR="${PROJECT_ROOT_DIR}/terraform/environments/${ENVIRONMENT}"
 	TERRAFORM_BACKEND_FILE="${TERRAFORM_ROOT_DIR}/terraform-backend.tf"
 	TERRAFORM_VARIABLES_FILE="${TERRAFORM_ROOT_DIR}/terraform.auto.tfvars"
 }
 
+# Terraform 設定ファイル生成処理を実行する。
 main() {
 	parse_common_args "terraform-configure" "$@"
 	if [[ "${HELP_REQUESTED}" == "true" ]]; then

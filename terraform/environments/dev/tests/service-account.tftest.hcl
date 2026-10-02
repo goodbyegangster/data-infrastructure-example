@@ -2,10 +2,14 @@
 mock_provider "google" {}
 
 variables {
-  project_id  = "example-project"
-  location    = "asia-northeast1"
-  environment = "dev"
-  suffix      = "sample"
+  project_id_raw_data  = "example-project"
+  project_id_mart_red  = "example-project"
+  project_id_mart_blue = "example-project"
+  location_raw_data    = "asia-northeast1"
+  location_mart_red    = "asia-northeast1"
+  location_mart_blue   = "asia-northeast1"
+  environment          = "dev"
+  suffix               = "sample"
 }
 
 # Dataform runtime Service Accountが運用方針どおりに構成されることを検証する。
@@ -20,7 +24,7 @@ run "configures_dataform_runtime_service_account" {
 
   # Terraformの対象projectにService Accountが作成されることを保証する。
   assert {
-    condition     = google_service_account.dataform_runtime.project == var.project_id
+    condition     = google_service_account.dataform_runtime.project == var.project_id_raw_data
     error_message = "The Dataform runtime service account must be created in the target project."
   }
 
@@ -38,7 +42,7 @@ run "configures_dataform_runtime_service_account" {
 
   # データプラットフォーム管理用Service Accountが対象projectに作成されることを保証する。
   assert {
-    condition     = google_service_account.data_platform_admin.project == var.project_id
+    condition     = google_service_account.data_platform_admin.project == var.project_id_raw_data
     error_message = "The data platform admin service account must be created in the target project."
   }
 
