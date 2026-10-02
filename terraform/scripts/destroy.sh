@@ -77,7 +77,7 @@ confirm_deletion() {
 	[[ "${confirmation}" == "${BUCKET_NAME}" ]] || die "Confirmation did not match."
 }
 
-# Bucketを削除する。
+# Bucket を削除する。
 delete_bucket() {
 	# 全 object version を削除した後に Bucket を削除する。
 	gcloud storage rm "${BUCKET_URL}/" \

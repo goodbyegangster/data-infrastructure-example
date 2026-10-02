@@ -31,9 +31,9 @@ bootstrap-destroy-dry-run: require-env-file ## Terraform state bucket 削除処�
 bootstrap-destroy-run: require-env-file ## Terraform state bucket を削除する
 	bash ./scripts/destroy.sh --env-file "$(ENV_FILE)"
 
-.PHONY: configure-terraform
-configure-terraform: require-env-file ## Terraformのbackendと変数を設定する
-	bash ./bootstrap/scripts/configure-terraform.sh --env-file "$(ENV_FILE)"
+.PHONY: terraform-configure
+terraform-configure: require-env-file ## Terraform の backend と vars ファイルを作成する
+	bash ./scripts/terraform-configure.sh --env-file "$(ENV_FILE)"
 
 .PHONY: terraform-plan terraform-test terraform-apply sakila-load
 terraform-plan: ## Terraformの変更予定を確認する

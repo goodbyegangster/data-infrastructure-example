@@ -13,7 +13,7 @@ SQL_FILE="${SCRIPT_DIR}/sakila.sql"
 readonly SQL_FILE
 
 # shellcheck source-path=SCRIPTDIR
-# shellcheck source=../bootstrap/scripts/common.sh
+# shellcheck source=../scripts/common.sh
 source "${SCRIPT_DIR}/../scripts/common.sh"
 
 # 使用方法を表示する。
