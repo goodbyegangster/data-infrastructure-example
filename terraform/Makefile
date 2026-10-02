@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-ENV_FILE ?= config/dev.env.local
+ENV_FILE ?= config/dev.env
 TERRAFORM_DIR := terraform/environments/dev
 
 .PHONY: help
@@ -15,19 +15,21 @@ require-env-file:
 		exit 2; \
 	fi
 
-.PHONY: bootstrap bootstrap-dry-run
-bootstrap: require-env-file ## Terraform state bucketを作成・設定する
-	bash ./bootstrap/scripts/bootstrap.sh --env-file "$(ENV_FILE)"
+.PHONY: bootstrap-dry-run
+bootstrap-dry-run: require-env-file ## Terraform state bucket 作成処理のドライラン
+	bash ./scripts/bootstrap.sh --env-file "$(ENV_FILE)" --dry-run
 
-bootstrap-dry-run: require-env-file ## Terraform state bucketの作成内容を確認する
-	bash ./bootstrap/scripts/bootstrap.sh --env-file "$(ENV_FILE)" --dry-run
+.PHONY: bootstrap-run
+bootstrap-run: require-env-file ## Terraform state bucket を作成する
+	bash ./scripts/bootstrap.sh --env-file "$(ENV_FILE)"
 
-.PHONY: destroy destroy-execute
-destroy: require-env-file ## Terraform state bucketの削除内容を確認する
-	bash ./bootstrap/scripts/destroy.sh --env-file "$(ENV_FILE)"
+.PHONY: bootstrap-destroy-dry-run
+bootstrap-destroy-dry-run: require-env-file ## Terraform state bucket 削除処理のドライラン
+	bash ./scripts/destroy.sh --env-file "$(ENV_FILE)" --dry-run
 
-destroy-execute: require-env-file ## Terraform state bucketと全object versionを削除する
-	bash ./bootstrap/scripts/destroy.sh --env-file "$(ENV_FILE)" --execute
+.PHONY: bootstrap-destroy-run
+bootstrap-destroy-run: require-env-file ## Terraform state bucket を削除する
+	bash ./scripts/destroy.sh --env-file "$(ENV_FILE)"
 
 .PHONY: configure-terraform
 configure-terraform: require-env-file ## Terraformのbackendと変数を設定する

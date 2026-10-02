@@ -14,6 +14,7 @@ readonly SCRIPT_DIR
 # shellcheck source=common.sh
 source "${SCRIPT_DIR}/common.sh"
 
+# bootstrap 処理で必要となる API 一覧
 declare -ar REQUIRED_APIS=(
 	"serviceusage.googleapis.com"
 	"cloudresourcemanager.googleapis.com"
@@ -30,13 +31,17 @@ Usage:
     [--dry-run]
 
 Options:
-  --env-file  Read PROJECT_ID, LOCATION, ENVIRONMENT, and SUFFIX from this file.
+  --env-file  Read project IDs, locations, ENVIRONMENT, and SUFFIX from this file.
   --dry-run   Show the planned actions without changing Google Cloud.
   --help, -h  Show this help.
 
 Env file format:
-  PROJECT_ID=example-project
-  LOCATION=asia-northeast1
+  PROJECT_ID_RAW_DATA=example-raw-project
+  PROJECT_ID_MART_RED=example-mart-red-project
+  PROJECT_ID_MART_BLUE=example-mart-blue-project
+  LOCATION_RAW_DATA=asia-northeast1
+  LOCATION_MART_RED=asia-northeast1
+  LOCATION_MART_BLUE=asia-northeast1
   ENVIRONMENT=dev
   SUFFIX=sample
 
@@ -47,7 +52,7 @@ Exit status:
 EOF
 }
 
-# APIが有効になるまで上限付きで待機する。
+# API が有効になるまで待機する。
 wait_for_api() {
 	local api="$1"
 	local attempt
@@ -59,7 +64,7 @@ wait_for_api() {
 				--enabled \
 				--filter="config.name=${api}" \
 				--format='value(config.name)' \
-				--project="${PROJECT_ID}"
+				--project="${PROJECT_ID_RAW_DATA}"
 		)" || die "Failed to check API status: ${api}"
 		if [[ "${enabled_api}" == "${api}" ]]; then
 			return 0
@@ -69,7 +74,7 @@ wait_for_api() {
 	die "Timed out waiting for API enablement: ${api}"
 }
 
-# 無効なAPIだけを有効化する。
+# Google Cloud の API を有効化する。
 enable_required_apis() {
 	local api
 	local enabled_api
@@ -81,7 +86,7 @@ enable_required_apis() {
 				--enabled \
 				--filter="config.name=${api}" \
 				--format='value(config.name)' \
-				--project="${PROJECT_ID}"
+				--project="${PROJECT_ID_RAW_DATA}"
 		)" || die "Failed to check API status: ${api}"
 		if [[ "${enabled_api}" != "${api}" ]]; then
 			missing_apis+=("${api}")
@@ -102,39 +107,40 @@ enable_required_apis() {
 		return 0
 	fi
 
-	# 副作用: 対象projectでbootstrapに必要なAPIを有効化する。
+	# API を有効化する。
 	gcloud services enable "${missing_apis[@]}" \
-		--project="${PROJECT_ID}" \
+		--project="${PROJECT_ID_RAW_DATA}" \
 		--quiet
 	for api in "${missing_apis[@]}"; do
 		wait_for_api "${api}"
 	done
 }
 
-# state bucketを作成して必要な保護設定を適用する。
+# Terraform remote state 向け GCS Bucket を作成する。
 create_bucket() {
 	local labels
 
 	labels="managed_by=${LABEL_MANAGED_BY},purpose=${LABEL_PURPOSE}"
 	labels+=",environment=${ENVIRONMENT}"
+
 	log warning "Bucket to create: ${BUCKET_URL}"
 	if [[ "${DRY_RUN}" == "true" ]]; then
 		return 0
 	fi
 
-	# 副作用: Terraform state専用のCloud Storage bucketを作成する。
+	# GCS Bucket を作成する。
 	gcloud storage buckets create "${BUCKET_URL}" \
 		--default-storage-class="STANDARD" \
-		--location="${LOCATION}" \
-		--project="${PROJECT_ID}" \
+		--location="${LOCATION_RAW_DATA}" \
+		--project="${PROJECT_ID_RAW_DATA}" \
 		--public-access-prevention \
 		--soft-delete-duration="0" \
 		--uniform-bucket-level-access \
 		--quiet
 
-	# 副作用: bucketのversioningと識別用labelを設定する。
+	# 作成した GCS Bucket の versioning と識別用ラベルを設定する。
 	gcloud storage buckets update "${BUCKET_URL}" \
-		--project="${PROJECT_ID}" \
+		--project="${PROJECT_ID_RAW_DATA}" \
 		--update-labels="${labels}" \
 		--versioning \
 		--quiet
@@ -151,18 +157,20 @@ main() {
 	fi
 
 	load_env_file
-	validate_and_derive_inputs
-	check_tool_versions
-	check_authentication_and_project
+	validate_inputs
+	derive_values
+	verify_tool_versions
+	verify_authentication_and_project
 	print_execution_context
 	enable_required_apis
+
 	if [[ "${DRY_RUN}" == "true" && "${REQUIRED_APIS_READY}" == "false" ]]; then
 		create_bucket
 		log success "Result: dry-run completed; no changes were made"
 		return 0
 	fi
 
-	if bucket_exists_in_project; then
+	if has_state_bucket; then
 		verify_bucket_configuration || die "Existing bucket configuration does not match."
 		log success "State bucket: already configured"
 		log success "Result: no changes required"

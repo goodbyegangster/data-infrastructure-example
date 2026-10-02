@@ -1,7 +1,36 @@
-# dataform-sample-repo-infra
+# terraform
 
-Google Cloud 上の Dataform を検証利用するため、必要となるクラウド・リソースを作成するリポジトリ。
+## bootstrap
 
-## memo
+Terraform 実行のための準備。
 
-Terraform の remote state を保存する Cloud Storage bucket を作成し、ローカルから Terraform を実行できる状態を準備する。
+- Google Cloud API の有効化
+- Terraform remote state 向けの GCS Bucket 作成
+
+### (1) `config/dev.env` 作成
+
+[config/dev.env.example](config/dev.env.example) を参考に `config/dev.env` を作成。
+
+### (2) dry run
+
+```sh
+make bootstrap-dry-run
+```
+
+### (3) run
+
+```sh
+make bootstrap-run
+```
+
+## cleanup
+
+### (X) Terraform remote state 向け GCS Bucket 削除
+
+```sh
+make bootstrap-destroy-dry-run
+```
+
+```sh
+make bootstrap-destroy-run
+```

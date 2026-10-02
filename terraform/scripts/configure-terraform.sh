@@ -27,7 +27,7 @@ Usage:
   configure-terraform.sh --env-file ENV_FILE
 
 Required option:
-  --env-file ENV_FILE  PROJECT_ID, LOCATION, ENVIRONMENT, and SUFFIX input file
+  --env-file ENV_FILE  Project IDs, locations, ENVIRONMENT, and SUFFIX input file
 
 Other option:
   -h, --help            Show this help
@@ -105,17 +105,20 @@ write_variable_values() {
 	local terraform_root="$1"
 	local variable_file="${terraform_root}/terraform.auto.tfvars"
 	local temporary_file
-	local terraform_location="${LOCATION,,}"
 
 	temporary_file="$(mktemp "${terraform_root}/.terraform.auto.tfvars.XXXXXX")" \
 		|| die "Failed to create a temporary variable file."
 
 	if ! printf '%s\n' \
 		"${GENERATED_FILE_HEADER}" \
-		"project_id  = \"${PROJECT_ID}\"" \
-		"location    = \"${terraform_location}\"" \
-		"environment = \"${ENVIRONMENT}\"" \
-		"suffix      = \"${SUFFIX}\"" >"${temporary_file}"; then
+		"project_id_raw_data  = \"${PROJECT_ID_RAW_DATA}\"" \
+		"project_id_mart_red  = \"${PROJECT_ID_MART_RED}\"" \
+		"project_id_mart_blue = \"${PROJECT_ID_MART_BLUE}\"" \
+		"location_raw_data    = \"${LOCATION_RAW_DATA,,}\"" \
+		"location_mart_red    = \"${LOCATION_MART_RED,,}\"" \
+		"location_mart_blue   = \"${LOCATION_MART_BLUE,,}\"" \
+		"environment          = \"${ENVIRONMENT}\"" \
+		"suffix               = \"${SUFFIX}\"" >"${temporary_file}"; then
 		rm -f -- "${temporary_file}"
 		die "Failed to write the Terraform variable values."
 	fi
@@ -133,16 +136,17 @@ main() {
 	fi
 
 	load_env_file
-	validate_and_derive_inputs
-	check_tool_versions
-	check_authentication_and_project
+	validate_inputs
+	derive_values
+	verify_tool_versions
+	verify_authentication_and_project
 	print_execution_context
 
 	terraform_root="${INFRA_DIR}/terraform/environments/${ENVIRONMENT}"
 	[[ -d "${terraform_root}" ]] || die "Terraform root was not found: ${terraform_root}"
 
-	if ! bucket_exists_in_project; then
-		die "State bucket was not found in project ${PROJECT_ID}: ${BUCKET_URL}"
+	if ! has_state_bucket; then
+		die "State bucket was not found in project ${PROJECT_ID_RAW_DATA}: ${BUCKET_URL}"
 	fi
 	verify_bucket_configuration || die "State bucket configuration does not match bootstrap."
 
