@@ -8,9 +8,9 @@
 set -Eeuo pipefail
 
 readonly MIN_GCLOUD_VERSION="500.0.0"
-readonly BUCKET_PREFIX="dataform-tfstate"
-readonly BACKEND_PREFIX_BASE="dataform"
-readonly LABEL_MANAGED_BY="dataform-bootstrap"
+readonly TERRAFORM_STATE_NAMESPACE="data-infra"
+readonly LABEL_SYSTEM="data-infrastructure-example"
+readonly LABEL_MANAGED_BY="bootstrap-script"
 readonly LABEL_PURPOSE="terraform-state"
 readonly ANSI_GREEN=$'\033[32m'
 readonly ANSI_ORANGE=$'\033[38;5;208m'
@@ -34,7 +34,6 @@ readonly LOCATION_VARS=(LOCATION_RAW_DATA LOCATION_MART_RED LOCATION_MART_BLUE)
 # env ファイルの値から自動生成される値
 BUCKET_NAME=""
 BUCKET_URL=""
-BACKEND_PREFIX=""
 ACTIVE_ACCOUNT=""
 PROJECT_NUMBER=""
 ENV_FILE=""
@@ -246,7 +245,7 @@ validate_inputs() {
 derive_values() {
 	local name
 
-	BUCKET_NAME="${BUCKET_PREFIX}-${SUFFIX}-${PROJECT_ID_RAW_DATA}-${ENVIRONMENT}"
+	BUCKET_NAME="${TERRAFORM_STATE_NAMESPACE}-tfstate-${SUFFIX}-${PROJECT_ID_RAW_DATA}-${ENVIRONMENT}"
 	if ((${#BUCKET_NAME} < 3 || ${#BUCKET_NAME} > 63)); then
 		die "Generated bucket name must contain 3 to 63 characters: ${BUCKET_NAME}" 2
 	fi
@@ -258,7 +257,6 @@ derive_values() {
 		printf -v "${name}" '%s' "${!name^^}"
 	done
 	BUCKET_URL="gs://${BUCKET_NAME}"
-	BACKEND_PREFIX="${BACKEND_PREFIX_BASE}/${ENVIRONMENT}"
 }
 
 # ドット区切りのバージョンが最低バージョン以上か確認する。
@@ -345,7 +343,6 @@ print_execution_context() {
 	log success "Location: ${LOCATION_RAW_DATA}"
 	log success "Environment: ${ENVIRONMENT}"
 	log success "State bucket: ${BUCKET_NAME}"
-	log success "Backend prefix: ${BACKEND_PREFIX}"
 }
 
 # 対象 Google Cloud Project に同名 Bucket が存在するか確認する。
@@ -400,6 +397,7 @@ verify_bucket_configuration() {
 	local actual_uniform_access
 	local actual_public_access_prevention
 	local actual_versioning
+	local actual_system
 	local actual_managed_by
 	local actual_purpose
 	local actual_environment
@@ -417,6 +415,7 @@ verify_bucket_configuration() {
 		get_bucket_attribute 'iamConfiguration.publicAccessPrevention'
 	)"
 	actual_versioning="$(get_bucket_attribute 'versioning.enabled')"
+	actual_system="$(get_bucket_attribute 'labels.system')"
 	actual_managed_by="$(get_bucket_attribute 'labels.managed_by')"
 	actual_purpose="$(get_bucket_attribute 'labels.purpose')"
 	actual_environment="$(get_bucket_attribute 'labels.environment')"
@@ -435,6 +434,8 @@ verify_bucket_configuration() {
 		"public access prevention" "enforced" \
 		"${actual_public_access_prevention,,}" || valid="false"
 	assert_bucket_attribute "versioning" "true" "${actual_versioning,,}" || valid="false"
+	assert_bucket_attribute \
+		"system label" "${LABEL_SYSTEM}" "${actual_system}" || valid="false"
 	assert_bucket_attribute \
 		"managed_by label" "${LABEL_MANAGED_BY}" "${actual_managed_by}" || valid="false"
 	assert_bucket_attribute \

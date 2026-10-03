@@ -1,7 +1,9 @@
 .DEFAULT_GOAL := help
 
 ENV_FILE ?= config/dev.env
-TERRAFORM_DIR := terraform/environments/dev
+ENVIRONMENT ?= dev
+DEPLOYMENTS := raw_data mart_red mart_blue
+TERRAFORM_DIRS := $(addprefix deployments/,$(addsuffix /$(ENVIRONMENT),$(DEPLOYMENTS)))
 
 .PHONY: help
 help:
@@ -35,15 +37,30 @@ bootstrap-destroy-run: require-env-file ## Terraform state bucket を削除す�
 terraform-configure: require-env-file ## Terraform の backend と tfvars ファイルを作成する
 	bash ./scripts/terraform-configure.sh --env-file "$(ENV_FILE)"
 
-.PHONY: terraform-plan terraform-test terraform-apply sakila-load
+.PHONY: terraform-plan
 terraform-plan: ## Terraformの変更予定を確認する
-	terraform -chdir=$(TERRAFORM_DIR) plan
+	@set -e; \
+	for terraform_dir in $(TERRAFORM_DIRS); do \
+		printf '\nTerraform plan: %s\n' "$${terraform_dir}"; \
+		terraform -chdir="$${terraform_dir}" plan; \
+	done
 
+.PHONY: terraform-test
 terraform-test: ## Terraformのmock testを実行する
-	terraform -chdir=$(TERRAFORM_DIR) test
+	@set -e; \
+	for terraform_dir in $(TERRAFORM_DIRS); do \
+		printf '\nTerraform test: %s\n' "$${terraform_dir}"; \
+		terraform -chdir="$${terraform_dir}" test; \
+	done
 
+.PHONY: terraform-apply
 terraform-apply: ## Terraformの変更をGoogle Cloudへ適用する
-	terraform -chdir=$(TERRAFORM_DIR) apply -auto-approve
+	@set -e; \
+	for terraform_dir in $(TERRAFORM_DIRS); do \
+		printf '\nTerraform apply: %s\n' "$${terraform_dir}"; \
+		terraform -chdir="$${terraform_dir}" apply -auto-approve; \
+	done
 
+.PHONY: sakila-load
 sakila-load: require-env-file ## Sakila検証用テーブルをBigQueryへ投入する
 	bash ./sakila/load.sh --env-file "$(ENV_FILE)"

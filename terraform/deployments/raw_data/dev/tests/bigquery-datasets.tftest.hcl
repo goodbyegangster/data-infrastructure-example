@@ -20,14 +20,10 @@ mock_provider "google" {
 }
 
 variables {
-  project_id_raw_data  = "example-project"
-  project_id_mart_red  = "example-project"
-  project_id_mart_blue = "example-project"
-  location_raw_data    = "asia-northeast1"
-  location_mart_red    = "asia-northeast1"
-  location_mart_blue   = "asia-northeast1"
-  environment          = "dev"
-  suffix               = "sample"
+  project_id  = "example-project"
+  location    = "asia-northeast1"
+  environment = "dev"
+  suffix      = "sample"
 }
 
 # Sakila入力用、Dataform出力用、assertion用のBigQuery datasetが作成されることを検証する。
@@ -55,7 +51,7 @@ run "configures_dataform_datasets" {
         google_bigquery_dataset.sakila,
         google_bigquery_dataset.dataform,
         google_bigquery_dataset.dataform_assertions,
-      ] : dataset.project == var.project_id_raw_data && dataset.location == var.location_raw_data
+      ] : dataset.project == var.project_id && dataset.location == var.location
     ])
     error_message = "The Dataform datasets must be created in the target project and location."
   }

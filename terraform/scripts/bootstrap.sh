@@ -120,7 +120,8 @@ enable_required_apis() {
 create_bucket() {
 	local labels
 
-	labels="managed_by=${LABEL_MANAGED_BY},purpose=${LABEL_PURPOSE}"
+	labels="system=${LABEL_SYSTEM},managed_by=${LABEL_MANAGED_BY}"
+	labels+=",purpose=${LABEL_PURPOSE}"
 	labels+=",environment=${ENVIRONMENT}"
 
 	log warning "Bucket to create: ${BUCKET_URL}"

@@ -6,7 +6,7 @@ resource "google_service_account" "dataform_runtime" {
   deletion_policy = "DELETE"
   display_name    = "Dataform runtime (${var.environment})"
   description     = "Executes Dataform workflows in the ${var.environment} environment."
-  project         = var.project_id_raw_data
+  project         = var.project_id
 }
 
 # BigQuery datasetを管理するService Accountを作成する。
@@ -17,7 +17,7 @@ resource "google_service_account" "data_platform_admin" {
   deletion_policy = "DELETE"
   display_name    = "Data platform admin (${var.environment})"
   description     = "Owns the data platform datasets in the ${var.environment} environment."
-  project         = var.project_id_raw_data
+  project         = var.project_id
 }
 
 # Dataformサービスエージェントを生成する。

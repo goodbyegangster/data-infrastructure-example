@@ -20,14 +20,10 @@ mock_provider "google" {
 }
 
 variables {
-  project_id_raw_data  = "example-project"
-  project_id_mart_red  = "example-project"
-  project_id_mart_blue = "example-project"
-  location_raw_data    = "asia-northeast1"
-  location_mart_red    = "asia-northeast1"
-  location_mart_blue   = "asia-northeast1"
-  environment          = "dev"
-  suffix               = "sample"
+  project_id  = "example-project"
+  location    = "asia-northeast1"
+  environment = "dev"
+  suffix      = "sample"
 }
 
 # 対象projectとlocationに環境別のDataform Repositoryが作成されることを検証する。
@@ -49,8 +45,8 @@ run "configures_dataform_repository" {
   # Repositoryが指定したprojectとlocationに作成されることを保証する。
   assert {
     condition = (
-      google_dataform_repository.main.project == var.project_id_raw_data &&
-      google_dataform_repository.main.region == var.location_raw_data
+      google_dataform_repository.main.project == var.project_id &&
+      google_dataform_repository.main.region == var.location
     )
     error_message = "The Dataform repository must be created in the target project and location."
   }

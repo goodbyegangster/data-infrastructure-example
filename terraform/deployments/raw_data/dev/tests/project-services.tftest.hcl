@@ -2,14 +2,10 @@
 mock_provider "google" {}
 
 variables {
-  project_id_raw_data  = "example-project"
-  project_id_mart_red  = "example-project"
-  project_id_mart_blue = "example-project"
-  location_raw_data    = "asia-northeast1"
-  location_mart_red    = "asia-northeast1"
-  location_mart_blue   = "asia-northeast1"
-  environment          = "dev"
-  suffix               = "sample"
+  project_id  = "example-project"
+  location    = "asia-northeast1"
+  environment = "dev"
+  suffix      = "sample"
 }
 
 # workloadリソースに必要なGoogle Cloud APIの構成を検証する。
