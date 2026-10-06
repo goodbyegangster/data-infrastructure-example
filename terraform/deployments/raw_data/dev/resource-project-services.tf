@@ -1,4 +1,4 @@
-# Workloadリソースの作成に必要なGoogle Cloud APIを有効化する。
+# 必要となる Google Cloud API を有効化する。
 resource "google_project_service" "workload" {
   for_each = toset([
     "bigquery.googleapis.com",
