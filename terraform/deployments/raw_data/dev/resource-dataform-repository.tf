@@ -1,4 +1,4 @@
-# Dataformのworkflowを管理するRepositoryを作成する。
+# Dataform の Repository を作成する。
 resource "google_dataform_repository" "main" {
   depends_on = [
     google_project_service.project["dataform.googleapis.com"],
@@ -8,8 +8,14 @@ resource "google_dataform_repository" "main" {
 
   project         = var.project_id
   region          = var.location
-  name            = "dataform-sample-${var.environment}"
-  display_name    = "dataform-sample-${var.environment}"
+  name            = "raw-data-${var.environment}"
+  display_name    = "raw-data-${var.environment}"
   service_account = google_service_account.dataform_runtime.email
+
   deletion_policy = "FORCE"
+
+  # 手動設定となる GitHub Repository との連携設定は Terraform 管理外とする
+  lifecycle {
+    ignore_changes = [git_remote_settings]
+  }
 }

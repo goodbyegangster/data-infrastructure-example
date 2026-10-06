@@ -1,4 +1,4 @@
-# 明示的に生成したDataformサービスエージェントへ標準のservice agent roleを付与する。
+# 明示的に生成した Dataform サービスエージェントへ標準の service agent role を付与する。
 resource "google_project_iam_member" "dataform_service_agent" {
   depends_on = [google_workload_identity_service_agent.dataform_service_agent]
 
@@ -7,7 +7,7 @@ resource "google_project_iam_member" "dataform_service_agent" {
   member  = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-dataform.iam.gserviceaccount.com"
 }
 
-# Dataformサービスエージェントにruntime Service Accountのtoken作成権限を付与する。
+# Dataform サービスエージェントに Dataform runtime Service Account の token 作成権限を付与する。
 resource "google_service_account_iam_member" "dataform_service_agent_token_creator" {
   depends_on = [google_project_iam_member.dataform_service_agent]
 
@@ -16,7 +16,7 @@ resource "google_service_account_iam_member" "dataform_service_agent_token_creat
   member             = "serviceAccount:service-${data.google_project.current.number}@gcp-sa-dataform.iam.gserviceaccount.com"
 }
 
-# Dataformサービスエージェントにruntime Service Accountの利用権限を付与する。
+# Dataform サービスエージェントに Dataform runtime Service Account の利用権限を付与する。
 resource "google_service_account_iam_member" "dataform_service_agent_user" {
   depends_on = [google_project_iam_member.dataform_service_agent]
 

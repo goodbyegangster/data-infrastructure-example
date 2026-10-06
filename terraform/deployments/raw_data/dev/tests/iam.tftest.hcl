@@ -25,28 +25,28 @@ variables {
   suffix      = "sample"
 }
 
-# runtime Service AccountへBigQuery jobの実行権限が付与されることを検証する。
+# Dataform runtime Service Account へ BigQuery job の実行権限が付与されることを検証する。
 run "grants_bigquery_job_permission_to_runtime" {
   command = plan
 
-  # BigQueryでquery jobを実行するためのproject roleが選択されることを保証する。
+  # BigQuery で query job を実行するための project role が選択されることを保証する。
   assert {
     condition     = google_project_iam_member.dataform_runtime_job_user.role == "roles/bigquery.jobUser"
     error_message = "The Dataform runtime service account must have the BigQuery Job User role."
   }
 
-  # 権限の付与先がDataform runtime Service Accountだけであることを保証する。
+  # 権限の付与先が Dataform runtime Service Account だけであることを保証する。
   assert {
     condition     = google_project_iam_member.dataform_runtime_job_user.member == google_service_account.dataform_runtime.member
     error_message = "The BigQuery Job User role must be granted to the Dataform runtime service account."
   }
 }
 
-# Dataformサービスエージェントがruntime Service Accountを利用できることを検証する。
+# Dataform サービスエージェントが runtime Service Account を利用できることを検証する。
 run "grants_runtime_access_to_dataform_service_agent" {
   command = plan
 
-  # IAM付与前に対象projectのDataformサービスエージェントを生成することを保証する。
+  # IAM 付与前に対象 project の Dataform サービスエージェントを生成することを保証する。
   assert {
     condition = google_workload_identity_service_agent.dataform_service_agent.parent == (
       "projects/123456789012/locations/global/serviceProducers/dataform.googleapis.com"
@@ -54,13 +54,13 @@ run "grants_runtime_access_to_dataform_service_agent" {
     error_message = "The Dataform service agent must be generated before IAM roles are granted."
   }
 
-  # 明示的に生成したサービスエージェントへDataform標準roleを付与することを保証する。
+  # 明示的に生成したサービスエージェントへ Dataform 標準 role を付与することを保証する。
   assert {
     condition     = google_project_iam_member.dataform_service_agent.role == "roles/dataform.serviceAgent"
     error_message = "The Dataform service agent must have its standard service agent role."
   }
 
-  # Dataformの実行に必要なtoken作成とService Account利用の両権限を保証する。
+  # Dataform の実行に必要な token 作成と Service Account 利用の両権限を保証する。
   assert {
     condition = toset([
       google_service_account_iam_member.dataform_service_agent_token_creator.role,
@@ -72,7 +72,7 @@ run "grants_runtime_access_to_dataform_service_agent" {
     error_message = "The Dataform service agent must be able to impersonate the runtime service account."
   }
 
-  # 権限を対象projectのDataformサービスエージェントだけに付与することを保証する。
+  # 権限を対象 project の Dataform サービスエージェントだけに付与することを保証する。
   assert {
     condition = alltrue([
       for member in [
@@ -83,7 +83,7 @@ run "grants_runtime_access_to_dataform_service_agent" {
     error_message = "Runtime access must be granted to the target project's Dataform service agent."
   }
 
-  # project全体ではなく対象runtime Service Account上で権限を管理することを保証する。
+  # project 全体ではなく対象 runtime Service Account 上で権限を管理することを保証する。
   assert {
     condition = alltrue([
       for service_account_id in [

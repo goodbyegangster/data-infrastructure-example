@@ -50,7 +50,7 @@ run "normalizes_dataset_name_components" {
     suffix      = "sample-a"
   }
 
-  # suffix と環境名のハイフンが全 dataset ID で変換されることを保証する。
+  # suffix と環境名のハイフンが dataset ID で変換されることを保証する。
   assert {
     condition = toset(values(module.bigquery_datasets.dataset_ids)) == toset([
       "raw_sakila_sample_a_dev_env",

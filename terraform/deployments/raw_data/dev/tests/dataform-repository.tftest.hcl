@@ -1,15 +1,15 @@
-# Google Cloudへ接続せず、Google Providerのschemaを使ってDataform Repositoryのplanを検証する。
+# Google Cloud へ接続せず、Google Provider の schema を使って Dataform Repository の plan を検証する。
 mock_provider "google" {
   override_during = plan
 
-  # DataformサービスエージェントのIDを組み立てるproject numberを固定する。
+  # Dataform サービスエージェントの ID を組み立てる project number を固定する。
   mock_data "google_project" {
     defaults = {
       number = "123456789012"
     }
   }
 
-  # Repositoryに設定するruntime Service Accountのcomputed値を固定する。
+  # Repository に設定する runtime Service Account の computed 値を固定する。
   mock_resource "google_service_account" {
     defaults = {
       email  = "dataform-runtime-dev@example-project.iam.gserviceaccount.com"
@@ -26,23 +26,23 @@ variables {
   suffix      = "sample"
 }
 
-# 対象projectとlocationに環境別のDataform Repositoryが作成されることを検証する。
+# 対象 project と location に環境別の Dataform Repository が作成されることを検証する。
 run "configures_dataform_repository" {
   command = plan
 
-  # Repository IDに環境名が含まれることを保証する。
+  # Repository ID に環境名が含まれることを保証する。
   assert {
     condition     = google_dataform_repository.main.name == "dataform-sample-dev"
     error_message = "The Dataform repository ID must include the environment name."
   }
 
-  # Repositoryの表示名がRepository IDと一致することを保証する。
+  # Repository の表示名が Repository ID と一致することを保証する。
   assert {
     condition     = google_dataform_repository.main.display_name == google_dataform_repository.main.name
     error_message = "The Dataform repository display name must match its repository ID."
   }
 
-  # Repositoryが指定したprojectとlocationに作成されることを保証する。
+  # Repository が指定した project と location に作成されることを保証する。
   assert {
     condition = (
       google_dataform_repository.main.project == var.project_id &&
@@ -51,7 +51,7 @@ run "configures_dataform_repository" {
     error_message = "The Dataform repository must be created in the target project and location."
   }
 
-  # Workflowの実行主体に専用のruntime Service Accountが指定されることを保証する。
+  # Workflow の実行主体に専用の runtime Service Account が指定されることを保証する。
   assert {
     condition = google_dataform_repository.main.service_account == (
       "dataform-runtime-dev@example-project.iam.gserviceaccount.com"
@@ -59,7 +59,7 @@ run "configures_dataform_repository" {
     error_message = "The Dataform repository must use the dedicated runtime service account."
   }
 
-  # Terraform destroyでRepositoryと配下の子リソースが削除されることを保証する。
+  # Terraform destroy で Repository と配下のリソースが削除されることを保証する。
   assert {
     condition     = google_dataform_repository.main.deletion_policy == "FORCE"
     error_message = "The Dataform repository and its child resources must be deleted by Terraform destroy."
