@@ -1,4 +1,4 @@
-# Google Cloudへ接続せず、Google Providerのschemaを使ってplanを検証する。
+# Google Cloud へ接続せず、Google Provider の schema を使って plan を検証する。
 mock_provider "google" {}
 
 variables {
@@ -8,13 +8,13 @@ variables {
   suffix      = "sample"
 }
 
-# workloadリソースに必要なGoogle Cloud APIの構成を検証する。
+# workload リソースに必要な Google Cloud API の構成を検証する。
 run "configures_workload_services" {
   command = plan
 
-  # 必要なGoogle Cloud APIが過不足なく管理対象になっていることを保証する。
+  # 必要な Google Cloud API が過不足なく管理対象になっていることを保証する。
   assert {
-    condition = toset(keys(google_project_service.workload)) == toset([
+    condition = toset(keys(google_project_service.project)) == toset([
       "bigquery.googleapis.com",
       "dataform.googleapis.com",
       "iam.googleapis.com",
@@ -24,10 +24,10 @@ run "configures_workload_services" {
     error_message = "The required workload APIs must be configured."
   }
 
-  # Terraform管理から削除してもGoogle Cloud APIを無効化しないことを保証する。
+  # Terraform 管理から削除しても Google Cloud API を無効化しないことを保証する。
   assert {
     condition = alltrue([
-      for service in google_project_service.workload :
+      for service in google_project_service.project :
       service.disable_on_destroy == false
     ])
     error_message = "Workload APIs must remain enabled when removed from Terraform management."

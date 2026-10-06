@@ -60,8 +60,8 @@ main() {
 
 	terraform_root="${SCRIPT_DIR}/../terraform/environments/${ENVIRONMENT}"
 	[[ -d "${terraform_root}" ]] || die "Terraform root was not found: ${terraform_root}"
-	dataset_id="$(terraform -chdir="${terraform_root}" output -raw sakila_dataset_id)" \
-		|| die "Failed to read sakila_dataset_id from Terraform state."
+	dataset_id="$(terraform -chdir="${terraform_root}" output -raw raw_sakila_dataset_id)" \
+		|| die "Failed to read raw_sakila_dataset_id from Terraform state."
 	[[ "${dataset_id}" =~ ^[A-Za-z0-9_]+$ ]] \
 		|| die "Terraform returned an invalid Sakila dataset ID: ${dataset_id}"
 	query_location="${LOCATION_RAW_DATA,,}"

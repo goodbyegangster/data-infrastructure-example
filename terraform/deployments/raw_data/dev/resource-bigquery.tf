@@ -1,38 +1,28 @@
-# Dataform workflowの入力となるSakila検証用BigQuery datasetを作成する。
-resource "google_bigquery_dataset" "sakila" {
-  depends_on = [google_project_service.workload["bigquery.googleapis.com"]]
+# Raw Data Project で使用する BigQuery Dataset を作成する。
+module "bigquery_datasets" {
+  depends_on = [google_project_service.project["bigquery.googleapis.com"]]
 
-  project                    = var.project_id
-  dataset_id                 = "sakila_${replace(var.suffix, "-", "_")}_${replace(var.environment, "-", "_")}"
-  friendly_name              = "sakila_${replace(var.suffix, "-", "_")}_${replace(var.environment, "-", "_")}"
-  description                = "Stores Sakila source data used to validate Dataform workflows."
-  location                   = var.location
-  delete_contents_on_destroy = true
-  deletion_policy            = "DELETE"
-}
+  source = "../../../modules/bigquery_datasets"
 
-# Dataform workflowの出力先となるBigQuery datasetを作成する。
-resource "google_bigquery_dataset" "dataform" {
-  depends_on = [google_project_service.workload["bigquery.googleapis.com"]]
+  project_id             = var.project_id
+  location               = var.location
+  environment            = var.environment
+  suffix                 = var.suffix
+  owner_email            = google_service_account.data_platform_admin.email
+  dataform_runtime_email = google_service_account.dataform_runtime.email
 
-  project                    = var.project_id
-  dataset_id                 = "dataform_${replace(var.suffix, "-", "_")}_${replace(var.environment, "-", "_")}"
-  friendly_name              = "dataform_${replace(var.suffix, "-", "_")}_${replace(var.environment, "-", "_")}"
-  description                = "Stores tables and views created by Dataform workflows."
-  location                   = var.location
-  delete_contents_on_destroy = true
-  deletion_policy            = "DELETE"
-}
-
-# Dataform assertionの結果を保持するBigQuery datasetを作成する。
-resource "google_bigquery_dataset" "dataform_assertions" {
-  depends_on = [google_project_service.workload["bigquery.googleapis.com"]]
-
-  project                    = var.project_id
-  dataset_id                 = "dataform_assertions_${replace(var.suffix, "-", "_")}_${replace(var.environment, "-", "_")}"
-  friendly_name              = "dataform_assertions_${replace(var.suffix, "-", "_")}_${replace(var.environment, "-", "_")}"
-  description                = "Stores assertion views created by Dataform workflows."
-  location                   = var.location
-  delete_contents_on_destroy = true
-  deletion_policy            = "DELETE"
+  datasets = {
+    raw_sakila = {
+      description  = "Sakila raw data."
+      runtime_role = "READER"
+    }
+    stg_sakila = {
+      description  = "Sakila staging data."
+      runtime_role = "WRITER"
+    }
+    dataform_assertions = {
+      description  = "Dataform assertion data."
+      runtime_role = "WRITER"
+    }
+  }
 }

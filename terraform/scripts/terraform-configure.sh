@@ -158,7 +158,7 @@ configure_deployment() {
 	terraform_root_dir="${PROJECT_ROOT_DIR}/terraform/deployments/${deployment}/${ENVIRONMENT}"
 	terraform_backend_file="${terraform_root_dir}/terraform-backend.tf"
 	terraform_variables_file="${terraform_root_dir}/terraform.auto.tfvars"
-	backend_prefix="${TERRAFORM_STATE_NAMESPACE}/${deployment}/${ENVIRONMENT}"
+	backend_prefix="data_infra/${deployment}/${ENVIRONMENT}"
 
 	log warning "Terraform root: ${terraform_root_dir}"
 	log warning "Configuring GCS backend: ${BUCKET_NAME}/${backend_prefix}"

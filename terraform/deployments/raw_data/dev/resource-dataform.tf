@@ -1,7 +1,7 @@
 # Dataformのworkflowを管理するRepositoryを作成する。
 resource "google_dataform_repository" "main" {
   depends_on = [
-    google_project_service.workload["dataform.googleapis.com"],
+    google_project_service.project["dataform.googleapis.com"],
     google_service_account_iam_member.dataform_service_agent_token_creator,
     google_service_account_iam_member.dataform_service_agent_user,
   ]
