@@ -2,7 +2,7 @@
 mock_provider "google" {
   override_during = plan
 
-  # Dataform サービスエージェントの ID を組み立てる project number を固定する。
+  # Dataform サービスエージェントの ID を組み立てる Project number を固定する。
   mock_data "google_project" {
     defaults = {
       number = "123456789012"
@@ -18,6 +18,9 @@ mock_provider "google" {
   }
 }
 
+# Google Cloud へ接続せず、Google Beta Provider を使用するリソースも plan できるようにする。
+mock_provider "google-beta" {}
+
 variables {
   project_id  = "example-project"
   location    = "asia-northeast1"
@@ -29,7 +32,7 @@ variables {
 run "grants_bigquery_job_permission_to_runtime" {
   command = plan
 
-  # BigQuery で query job を実行するための project role が選択されることを保証する。
+  # BigQuery で query job を実行するための Project role が選択されることを保証する。
   assert {
     condition     = google_project_iam_member.dataform_runtime_job_user.role == "roles/bigquery.jobUser"
     error_message = "The Dataform runtime service account must have the BigQuery Job User role."
@@ -37,7 +40,10 @@ run "grants_bigquery_job_permission_to_runtime" {
 
   # 権限の付与先が Dataform runtime Service Account だけであることを保証する。
   assert {
-    condition     = google_project_iam_member.dataform_runtime_job_user.member == google_service_account.dataform_runtime.member
+    condition = (
+      google_project_iam_member.dataform_runtime_job_user.member ==
+      google_service_account.dataform_runtime.member
+    )
     error_message = "The BigQuery Job User role must be granted to the Dataform runtime service account."
   }
 }
@@ -46,7 +52,7 @@ run "grants_bigquery_job_permission_to_runtime" {
 run "grants_runtime_access_to_dataform_service_agent" {
   command = plan
 
-  # IAM 付与前に対象 project の Dataform サービスエージェントを生成することを保証する。
+  # IAM 付与前に対象 Project の Dataform サービスエージェントを生成することを保証する。
   assert {
     condition = google_workload_identity_service_agent.dataform_service_agent.parent == (
       "projects/123456789012/locations/global/serviceProducers/dataform.googleapis.com"
@@ -72,7 +78,7 @@ run "grants_runtime_access_to_dataform_service_agent" {
     error_message = "The Dataform service agent must be able to impersonate the runtime service account."
   }
 
-  # 権限を対象 project の Dataform サービスエージェントだけに付与することを保証する。
+  # 権限を対象 Project の Dataform サービスエージェントだけに付与することを保証する。
   assert {
     condition = alltrue([
       for member in [
@@ -83,7 +89,7 @@ run "grants_runtime_access_to_dataform_service_agent" {
     error_message = "Runtime access must be granted to the target project's Dataform service agent."
   }
 
-  # project 全体ではなく対象 runtime Service Account 上で権限を管理することを保証する。
+  # Project 全体ではなく対象 runtime Service Account 上で権限を管理することを保証する。
   assert {
     condition = alltrue([
       for service_account_id in [

@@ -27,5 +27,3 @@ output "dataform_runtime_service_account_email" {
   description = "Dataform workflow を実行する Service Account のメールアドレス"
   value       = google_service_account.dataform_runtime.email
 }
-
-

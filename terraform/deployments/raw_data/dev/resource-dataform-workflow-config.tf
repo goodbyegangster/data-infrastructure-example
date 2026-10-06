@@ -1,4 +1,4 @@
-# Dataform の Workflow configuration を作成する。
+# Dataform Workflow configuration を作成する。
 resource "google_dataform_repository_workflow_config" "main" {
   provider = google-beta
 

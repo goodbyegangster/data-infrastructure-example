@@ -1,5 +1,5 @@
 variable "project_id" {
-  description = "Deployment target Google Cloud project ID"
+  description = "Google Cloud の project ID"
   type        = string
 
   validation {
@@ -9,7 +9,7 @@ variable "project_id" {
 }
 
 variable "location" {
-  description = "Google Cloud location for regional resources"
+  description = "Google Cloud の location"
   type        = string
 
   validation {
@@ -19,7 +19,7 @@ variable "location" {
 }
 
 variable "environment" {
-  description = "Deployment environment name"
+  description = "環境名"
   type        = string
 
   validation {
@@ -39,7 +39,7 @@ variable "environment" {
 }
 
 variable "suffix" {
-  description = "Resource name suffix used to distinguish deployments"
+  description = "リソース作成時に採用される suffix 名"
   type        = string
 
   validation {

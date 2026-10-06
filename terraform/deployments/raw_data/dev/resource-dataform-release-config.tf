@@ -1,4 +1,4 @@
-# main branch を環境別設定でコンパイルする Dataform Release configuration を作成する。
+# 指定した Git commitish を環境別設定でコンパイルする Dataform Release configuration を作成する。
 resource "google_dataform_repository_release_config" "main" {
   provider = google-beta
 
@@ -13,16 +13,16 @@ resource "google_dataform_repository_release_config" "main" {
   deletion_policy = "DELETE"
 
   code_compilation_config {
-    default_database = google_bigquery_dataset.dataform.project
-    default_schema   = google_bigquery_dataset.dataform.dataset_id
-    default_location = google_bigquery_dataset.dataform.location
-    assertion_schema = google_bigquery_dataset.dataform_assertions.dataset_id
+    default_database = var.project_id
+    default_schema   = module.bigquery_datasets.dataset_ids["stg_sakila"]
+    default_location = var.location
+    assertion_schema = module.bigquery_datasets.dataset_ids["dataform_assertions"]
 
     vars = {
       executionEnvironment = var.environment
-      sakilaProject        = google_bigquery_dataset.sakila.project
-      sakilaDataset        = google_bigquery_dataset.sakila.dataset_id
-      sakilaStagingDataset = google_bigquery_dataset.dataform.dataset_id
+      sakilaProject        = var.project_id
+      sakilaDataset        = module.bigquery_datasets.dataset_ids["raw_sakila"]
+      sakilaStagingDataset = module.bigquery_datasets.dataset_ids["stg_sakila"]
     }
   }
 }

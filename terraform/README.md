@@ -29,12 +29,20 @@ make bootstrap-run
 
 hogehoge。
 
-#### (1)
+#### (1) 設定ファイルを作成
 
 作成した env ファイルを基に、Terraform backend と tfvars ファイルを作成する。
 
 ```sh
 make terraform-configure
+```
+
+#### (2) raw_data プロジェクト向けの実行
+
+```sh
+make terraform-raw-data-init
+make terraform-raw-data-plan
+make terraform-raw-data-apply
 ```
 
 ### 9. cleanup

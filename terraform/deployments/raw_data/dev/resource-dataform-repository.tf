@@ -1,4 +1,4 @@
-# Dataform の Repository を作成する。
+# Dataform Repository を作成する。
 resource "google_dataform_repository" "main" {
   depends_on = [
     google_project_service.project["dataform.googleapis.com"],
@@ -14,7 +14,7 @@ resource "google_dataform_repository" "main" {
 
   deletion_policy = "FORCE"
 
-  # 手動設定となる GitHub Repository との連携設定は Terraform 管理外とする
+  # 手動設定となる GitHub Repository との連携設定は Terraform 管理外とする。
   lifecycle {
     ignore_changes = [git_remote_settings]
   }

@@ -19,6 +19,9 @@ mock_provider "google" {
   }
 }
 
+# Google Cloud へ接続せず、Google Beta Provider を使用するリソースも plan できるようにする。
+mock_provider "google-beta" {}
+
 variables {
   project_id  = "example-project"
   location    = "asia-northeast1"

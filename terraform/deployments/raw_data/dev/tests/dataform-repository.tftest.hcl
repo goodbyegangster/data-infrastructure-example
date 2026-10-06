@@ -1,20 +1,32 @@
-# Google Cloud へ接続せず、Google Provider の schema を使って Dataform Repository の plan を検証する。
+# Google Cloud へ接続せず、Google Provider の schema を使って Dataform 構成の plan を検証する。
 mock_provider "google" {
   override_during = plan
 
-  # Dataform サービスエージェントの ID を組み立てる project number を固定する。
+  # Dataform サービスエージェントの ID を組み立てる Project number を固定する。
   mock_data "google_project" {
     defaults = {
       number = "123456789012"
     }
   }
 
-  # Repository に設定する runtime Service Account の computed 値を固定する。
+  # Repository と IAM の参照先を plan で検証できるように Service Account の computed 値を固定する。
   mock_resource "google_service_account" {
     defaults = {
       email  = "dataform-runtime-dev@example-project.iam.gserviceaccount.com"
       member = "serviceAccount:dataform-runtime-dev@example-project.iam.gserviceaccount.com"
       name   = "projects/example-project/serviceAccounts/dataform-runtime-dev@example-project.iam.gserviceaccount.com"
+    }
+  }
+}
+
+# Google Cloud へ接続せず、Google Beta Provider の schema を使って Dataform 構成を検証する。
+mock_provider "google-beta" {
+  override_during = plan
+
+  # Workflow から参照する Release configuration ID を plan で検証できるように固定する。
+  mock_resource "google_dataform_repository_release_config" {
+    defaults = {
+      id = "projects/example-project/locations/asia-northeast1/repositories/raw-data-dev/releaseConfigs/release-dev"
     }
   }
 }
@@ -26,42 +38,55 @@ variables {
   suffix      = "sample"
 }
 
-# 対象 project と location に環境別の Dataform Repository が作成されることを検証する。
+# Repository・Release・Workflow configuration の一連の構成を検証する。
 run "configures_dataform_repository" {
   command = plan
 
-  # Repository ID に環境名が含まれることを保証する。
-  assert {
-    condition     = google_dataform_repository.main.name == "dataform-sample-dev"
-    error_message = "The Dataform repository ID must include the environment name."
-  }
-
-  # Repository の表示名が Repository ID と一致することを保証する。
-  assert {
-    condition     = google_dataform_repository.main.display_name == google_dataform_repository.main.name
-    error_message = "The Dataform repository display name must match its repository ID."
-  }
-
-  # Repository が指定した project と location に作成されることを保証する。
+  # Repository が対象 Project と Location に環境別の名前で作成されることを保証する。
   assert {
     condition = (
+      google_dataform_repository.main.name == "raw-data-dev" &&
+      google_dataform_repository.main.display_name == google_dataform_repository.main.name &&
       google_dataform_repository.main.project == var.project_id &&
       google_dataform_repository.main.region == var.location
     )
-    error_message = "The Dataform repository must be created in the target project and location."
+    error_message = "The Dataform repository must follow the configured naming and location policy."
   }
 
-  # Workflow の実行主体に専用の runtime Service Account が指定されることを保証する。
+  # Repository が専用 runtime Service Account を使用することを保証する。
   assert {
-    condition = google_dataform_repository.main.service_account == (
-      "dataform-runtime-dev@example-project.iam.gserviceaccount.com"
+    condition = (
+      google_dataform_repository.main.service_account ==
+      "dataform-runtime-dev@example-project.iam.gserviceaccount.com" &&
+      google_dataform_repository.main.deletion_policy == "FORCE"
     )
-    error_message = "The Dataform repository must use the dedicated runtime service account."
+    error_message = "The Dataform repository must use the runtime service account and FORCE deletion policy."
   }
 
-  # Terraform destroy で Repository と配下のリソースが削除されることを保証する。
+  # Release configuration が main branch と指定した BigQuery 出力先を使用することを保証する。
   assert {
-    condition     = google_dataform_repository.main.deletion_policy == "FORCE"
-    error_message = "The Dataform repository and its child resources must be deleted by Terraform destroy."
+    condition = (
+      google_dataform_repository_release_config.main.git_commitish == "main" &&
+      !google_dataform_repository_release_config.main.disabled &&
+      google_dataform_repository_release_config.main.code_compilation_config[0].default_database ==
+      var.project_id &&
+      google_dataform_repository_release_config.main.code_compilation_config[0].default_schema ==
+      module.bigquery_datasets.dataset_ids["stg_sakila"] &&
+      google_dataform_repository_release_config.main.code_compilation_config[0].assertion_schema ==
+      module.bigquery_datasets.dataset_ids["dataform_assertions"]
+    )
+    error_message = "The release configuration must compile main with the configured BigQuery settings."
+  }
+
+  # Workflow configuration が Release configuration と runtime Service Account を使用することを保証する。
+  assert {
+    condition = (
+      google_dataform_repository_workflow_config.main.release_config ==
+      google_dataform_repository_release_config.main.id &&
+      google_dataform_repository_workflow_config.main.invocation_config[0].service_account ==
+      "dataform-runtime-dev@example-project.iam.gserviceaccount.com" &&
+      !google_dataform_repository_workflow_config.main.disabled
+    )
+    error_message = "The workflow configuration must execute the release with the runtime service account."
   }
 }

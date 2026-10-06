@@ -1,5 +1,15 @@
 # Google Cloud へ接続せず、Google Provider の schema を使って plan を検証する。
-mock_provider "google" {}
+mock_provider "google" {
+  # Dataform サービスエージェントの ID を組み立てる Project number を固定する。
+  mock_data "google_project" {
+    defaults = {
+      number = "123456789012"
+    }
+  }
+}
+
+# Google Cloud へ接続せず、Google Beta Provider を使用するリソースも plan できるようにする。
+mock_provider "google-beta" {}
 
 variables {
   project_id  = "example-project"

@@ -3,12 +3,11 @@
 ENV_FILE ?= config/dev.env
 ENVIRONMENT ?= dev
 DEPLOYMENTS := raw_data mart_red mart_blue
-TERRAFORM_DIRS := $(addprefix deployments/,$(addsuffix /$(ENVIRONMENT),$(DEPLOYMENTS)))
 
 .PHONY: help
 help:
-	@printf "%-30s %-60s\n" "[Sub command]" "[Description]"
-	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "%-30s %-60s\n", $$1, $$2}'
+	@printf "%-30s %-45s\n" "[Sub command]" "[Description]"
+	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "%-30s %-45s\n", $$1, $$2}'
 
 .PHONY: require-env-file
 require-env-file:
@@ -37,30 +36,26 @@ bootstrap-destroy-run: require-env-file ## Terraform state bucket を削除す�
 terraform-configure: require-env-file ## Terraform の backend と tfvars ファイルを作成する
 	bash ./scripts/terraform-configure.sh --env-file "$(ENV_FILE)"
 
-.PHONY: terraform-plan
-terraform-plan: ## Terraformの変更予定を確認する
-	@set -e; \
-	for terraform_dir in $(TERRAFORM_DIRS); do \
-		printf '\nTerraform plan: %s\n' "$${terraform_dir}"; \
-		terraform -chdir="$${terraform_dir}" plan; \
-	done
+.PHONY: terraform-raw-data-init
+terraform-raw-data-init: ## [raw_data] terraform init
+	terraform -chdir="./deployments/raw_data/dev" init
 
-.PHONY: terraform-test
-terraform-test: ## Terraformのmock testを実行する
-	@set -e; \
-	for terraform_dir in $(TERRAFORM_DIRS); do \
-		printf '\nTerraform test: %s\n' "$${terraform_dir}"; \
-		terraform -chdir="$${terraform_dir}" test; \
-	done
+.PHONY: terraform-raw-data-plan
+terraform-raw-data-plan: ## [raw_data] terraform plan
+	terraform -chdir="./deployments/raw_data/dev" plan
 
-.PHONY: terraform-apply
-terraform-apply: ## Terraformの変更をGoogle Cloudへ適用する
-	@set -e; \
-	for terraform_dir in $(TERRAFORM_DIRS); do \
-		printf '\nTerraform apply: %s\n' "$${terraform_dir}"; \
-		terraform -chdir="$${terraform_dir}" apply -auto-approve; \
-	done
+.PHONY: terraform-raw-data-test
+terraform-raw-data-test: ## [raw_data] terraform test
+	terraform -chdir="./deployments/raw_data/dev" test
+
+.PHONY: terraform-raw-data-apply
+terraform-raw-data-apply: ## [raw_data] terraform apply
+	terraform -chdir="./deployments/raw_data/dev" apply -auto-approve
+
+.PHONY: terraform-raw-data-destroy
+terraform-raw-data-destroy: ## [raw_data] terraform destroy
+	terraform -chdir="./deployments/raw_data/dev" destroy
 
 .PHONY: sakila-load
-sakila-load: require-env-file ## Sakila検証用テーブルをBigQueryへ投入する
+sakila-load: require-env-file ## Sakila テーブルを BigQuery に作成する
 	bash ./sakila/load.sh --env-file "$(ENV_FILE)"

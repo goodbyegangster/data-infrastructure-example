@@ -1,5 +1,15 @@
 # Google Cloud へ接続せず、Google Provider の schema を使って plan を検証する。
-mock_provider "google" {}
+mock_provider "google" {
+  # Dataform サービスエージェントの ID を組み立てる Project number を固定する。
+  mock_data "google_project" {
+    defaults = {
+      number = "123456789012"
+    }
+  }
+}
+
+# Google Cloud へ接続せず、Google Beta Provider を使用するリソースも plan できるようにする。
+mock_provider "google-beta" {}
 
 variables {
   project_id  = "example-project"
@@ -8,23 +18,23 @@ variables {
   suffix      = "sample"
 }
 
-# Dataform runtime Service Account が運用方針どおりに構成されることを検証する。
-run "configures_dataform_runtime_service_account" {
+# Dataform runtime と BigQuery Dataset Owner 用 Service Account の構成を検証する。
+run "configures_service_accounts" {
   command = plan
 
-  # 環境を識別できる Service Account ID になることを保証する。
+  # Dataform runtime Service Account ID に環境名が含まれることを保証する。
   assert {
     condition     = google_service_account.dataform_runtime.account_id == "dataform-runtime-dev"
     error_message = "The Dataform runtime service account ID must include the environment name."
   }
 
-  # Terraform の対象 project に Service Account が作成されることを保証する。
+  # Dataform runtime Service Account が対象 Project に作成されることを保証する。
   assert {
     condition     = google_service_account.dataform_runtime.project == var.project_id
     error_message = "The Dataform runtime service account must be created in the target project."
   }
 
-  # Terraform destroy で Service Account が削除されることを保証する。
+  # Terraform destroy で Dataform runtime Service Account が削除されることを保証する。
   assert {
     condition     = google_service_account.dataform_runtime.deletion_policy == "DELETE"
     error_message = "The Dataform runtime service account must be deleted by Terraform destroy."
