@@ -83,3 +83,35 @@ run "configures_datasets_with_common_policy" {
     error_message = "Each BigQuery Dataset must have only the configured owner and runtime access."
   }
 }
+
+# 別 Project の runtime に staging だけの読み取り権限を付与することを検証する。
+run "grants_additional_reader_only_to_staging" {
+  command = plan
+
+  variables {
+    datasets = {
+      raw_sakila = {
+        description  = "Sakila raw data."
+        runtime_role = "READER"
+      }
+      stg_sakila = {
+        description   = "Sakila staging data."
+        runtime_role  = "WRITER"
+        reader_emails = ["dataform-runtime-dev@example-red-project.iam.gserviceaccount.com"]
+      }
+    }
+  }
+
+  # Mart runtime には staging の READER 権限だけが追加されることを保証する。
+  assert {
+    condition = (
+      length(google_bigquery_dataset.managed["raw_sakila"].access) == 2 &&
+      length(google_bigquery_dataset.managed["stg_sakila"].access) == 3 &&
+      length([
+        for grant in google_bigquery_dataset.managed["stg_sakila"].access : grant
+        if grant.role == "READER" && grant.user_by_email == "dataform-runtime-dev@example-red-project.iam.gserviceaccount.com"
+      ]) == 1
+    )
+    error_message = "The additional runtime must receive only READER access to staging."
+  }
+}

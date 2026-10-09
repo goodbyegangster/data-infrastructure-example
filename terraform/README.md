@@ -27,7 +27,7 @@ make bootstrap-run
 
 ### 3. Terraform
 
-hogehoge。
+Terraform の実行。
 
 #### (1) 設定ファイルを作成
 
@@ -37,7 +37,15 @@ hogehoge。
 make terraform-configure
 ```
 
-#### (2) raw_data プロジェクト向けの実行
+#### (2) mart_red プロジェクト向けの実行
+
+```sh
+make terraform-mart-red-init
+make terraform-mart-red-plan
+make terraform-mart-red-apply
+```
+
+#### (3) raw_data プロジェクト向けの実行
 
 ```sh
 make terraform-raw-data-init
@@ -47,7 +55,14 @@ make terraform-raw-data-apply
 
 ### 9. cleanup
 
-#### (X) Terraform remote state 向け GCS Bucket 削除
+#### (1) terraform destroy
+
+```sh
+make terraform-mart-red-destroy
+make terraform-raw-data-destroy
+```
+
+#### (2) Terraform remote state 向け GCS Bucket 削除
 
 ```sh
 make bootstrap-destroy-dry-run

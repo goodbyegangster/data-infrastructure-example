@@ -31,8 +31,9 @@ variable "dataform_runtime_email" {
 variable "datasets" {
   description = "作成する BigQuery Dataset 名"
   type = map(object({
-    description  = string
-    runtime_role = string
+    description   = string
+    runtime_role  = string
+    reader_emails = optional(set(string), [])
   }))
 
   validation {

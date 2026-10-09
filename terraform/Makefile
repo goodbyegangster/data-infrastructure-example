@@ -56,6 +56,26 @@ terraform-raw-data-apply: ## [raw_data] terraform apply
 terraform-raw-data-destroy: ## [raw_data] terraform destroy
 	terraform -chdir="./deployments/raw_data/dev" destroy
 
+.PHONY: terraform-mart-red-init
+terraform-mart-red-init: ## [mart_red] terraform init
+	terraform -chdir="./deployments/mart_red/dev" init
+
+.PHONY: terraform-mart-red-plan
+terraform-mart-red-plan: ## [mart_red] terraform plan
+	terraform -chdir="./deployments/mart_red/dev" plan
+
+.PHONY: terraform-mart-red-test
+terraform-mart-red-test: ## [mart_red] terraform test
+	terraform -chdir="./deployments/mart_red/dev" test
+
+.PHONY: terraform-mart-red-apply
+terraform-mart-red-apply: ## [mart_red] terraform apply
+	terraform -chdir="./deployments/mart_red/dev" apply -auto-approve
+
+.PHONY: terraform-mart-red-destroy
+terraform-mart-red-destroy: ## [mart_red] terraform destroy
+	terraform -chdir="./deployments/mart_red/dev" destroy
+
 .PHONY: sakila-load
 sakila-load: require-env-file ## Sakila テーブルを BigQuery に作成する
 	bash ./sakila/load.sh --env-file "$(ENV_FILE)"

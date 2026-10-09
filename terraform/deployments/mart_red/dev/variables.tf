@@ -47,3 +47,23 @@ variable "suffix" {
     error_message = "suffix must contain lowercase letters, digits, or hyphens."
   }
 }
+
+variable "raw_data_project_id" {
+  description = "参照元 staging Dataset が存在する Google Cloud Project ID"
+  type        = string
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]{4,28}[a-z0-9]$", var.raw_data_project_id))
+    error_message = "raw_data_project_id must be a valid Google Cloud project ID."
+  }
+}
+
+variable "raw_data_staging_dataset_id" {
+  description = "参照元 staging の BigQuery Dataset ID"
+  type        = string
+
+  validation {
+    condition     = length(var.raw_data_staging_dataset_id) <= 1024 && can(regex("^[A-Za-z0-9_]+$", var.raw_data_staging_dataset_id))
+    error_message = "raw_data_staging_dataset_id must be a valid BigQuery Dataset ID."
+  }
+}

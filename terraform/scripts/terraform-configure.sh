@@ -97,6 +97,7 @@ write_variable_values() {
 	local terraform_variables_file="$1"
 	local terraform_project_id="$2"
 	local terraform_location="$3"
+	local deployment="$4"
 	local temporary_file
 
 	temporary_file="$(mktemp "${terraform_variables_file}.XXXXXX")" \
@@ -110,6 +111,15 @@ write_variable_values() {
 		"suffix      = \"${SUFFIX}\"" >"${temporary_file}"; then
 		rm -f -- "${temporary_file}"
 		die "Failed to write the Terraform variable values."
+	fi
+
+	if [[ "${deployment}" == "mart_red" ]]; then
+		if ! printf '%s\n' \
+			"raw_data_project_id = \"${PROJECT_ID_RAW_DATA}\"" \
+			"raw_data_staging_dataset_id = \"stg_sakila_${SUFFIX//-/_}_${ENVIRONMENT//-/_}\"" >>"${temporary_file}"; then
+			rm -f -- "${temporary_file}"
+			die "Failed to write the Mart Red staging configuration."
+		fi
 	fi
 
 	move_generated_file "${temporary_file}" "${terraform_variables_file}" "Terraform variables"
@@ -164,7 +174,7 @@ configure_deployment() {
 	log warning "Configuring GCS backend: ${BUCKET_NAME}/${backend_prefix}"
 	write_backend_configuration "${terraform_backend_file}" "${backend_prefix}"
 	write_variable_values \
-		"${terraform_variables_file}" "${terraform_project_id}" "${terraform_location}"
+		"${terraform_variables_file}" "${terraform_project_id}" "${terraform_location}" "${deployment}"
 }
 
 # Terraform 設定ファイル生成処理を実行する。

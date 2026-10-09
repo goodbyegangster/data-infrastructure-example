@@ -23,4 +23,14 @@ resource "google_bigquery_dataset" "managed" {
     role          = each.value.runtime_role
     user_by_email = var.dataform_runtime_email
   }
+
+  # 別 Project の Dataform runtime などに追加の読み取り権限を付与する。
+  dynamic "access" {
+    for_each = each.value.reader_emails
+
+    content {
+      role          = "READER"
+      user_by_email = access.value
+    }
+  }
 }

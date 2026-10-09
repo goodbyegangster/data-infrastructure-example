@@ -47,3 +47,17 @@ variable "suffix" {
     error_message = "suffix must contain lowercase letters, digits, or hyphens."
   }
 }
+
+variable "mart_red_runtime_service_account_email" {
+  description = "staging の読み取りを許可する Mart Red runtime Service Account。Mart Red 作成後に指定する。"
+  type        = string
+  default     = null
+
+  validation {
+    condition = var.mart_red_runtime_service_account_email == null ? true : can(regex(
+      "^[a-z][a-z0-9-]{4,28}[a-z0-9]@[a-z][a-z0-9-]{4,28}[a-z0-9]\\.iam\\.gserviceaccount\\.com$",
+      var.mart_red_runtime_service_account_email
+    ))
+    error_message = "mart_red_runtime_service_account_email must be a service account email or null."
+  }
+}
