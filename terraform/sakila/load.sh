@@ -29,7 +29,7 @@ Other option:
   -h, --help            Show this help
 
 Example:
-  ./sakila/load.sh --env-file config/dev.env.local
+  ./sakila/load.sh --env-file config/dev.env
 
 Exit status:
   0  Sakila tables loaded successfully
@@ -58,7 +58,7 @@ main() {
 	command -v terraform >/dev/null 2>&1 || die "terraform is required."
 	verify_authentication_and_project
 
-	terraform_root="${SCRIPT_DIR}/../terraform/environments/${ENVIRONMENT}"
+	terraform_root="${SCRIPT_DIR}/../deployments/raw_data/${ENVIRONMENT}"
 	[[ -d "${terraform_root}" ]] || die "Terraform root was not found: ${terraform_root}"
 	dataset_id="$(terraform -chdir="${terraform_root}" output -raw raw_sakila_dataset_id)" \
 		|| die "Failed to read raw_sakila_dataset_id from Terraform state."
@@ -78,7 +78,8 @@ main() {
 		>/dev/null || die "Sakila dataset was not found: ${PROJECT_ID_RAW_DATA}.${dataset_id}"
 
 	log warning "Existing Sakila tables will be replaced."
-	# 副作用: 対象datasetにある同名テーブルを検証用データで置き換える。
+
+	# 対象datasetにある同名テーブルを検証用データで置き換える。
 	bq --project_id="${PROJECT_ID_RAW_DATA}" --location="${query_location}" query \
 		--parameter="project_id:STRING:${PROJECT_ID_RAW_DATA}" \
 		--parameter="dataset_id:STRING:${dataset_id}" \

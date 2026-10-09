@@ -69,18 +69,31 @@ run "configures_datasets_with_common_policy" {
     error_message = "BigQuery Datasets and their contents must be deleted by Terraform destroy."
   }
 
-  # 各 Dataset の Owner と runtime 権限を指定した Service Account だけに限定することを保証する。
+  # 各 Dataset の Service Account 権限が指定した Owner と runtime から変わらないことを保証する。
   assert {
     condition = alltrue([
       for name, dataset in google_bigquery_dataset.managed :
       toset([
         for grant in dataset.access : "${grant.role}:${grant.user_by_email}"
+        if grant.special_group != "projectOwners"
         ]) == toset([
         "OWNER:${var.owner_email}",
         "${var.datasets[name].runtime_role}:${var.dataform_runtime_email}",
       ])
     ])
-    error_message = "Each BigQuery Dataset must have only the configured owner and runtime access."
+    error_message = "Service account access must remain limited to the configured owner and runtime."
+  }
+
+  # 全 Dataset で Google Project の Owner 全員に OWNER 権限が付与されることを保証する。
+  assert {
+    condition = alltrue([
+      for dataset in google_bigquery_dataset.managed :
+      length([
+        for grant in dataset.access : grant
+        if grant.role == "OWNER" && grant.special_group == "projectOwners"
+      ]) == 1
+    ])
+    error_message = "Every BigQuery Dataset must grant OWNER access to projectOwners."
   }
 }
 
@@ -105,8 +118,8 @@ run "grants_additional_reader_only_to_staging" {
   # Mart runtime には staging の READER 権限だけが追加されることを保証する。
   assert {
     condition = (
-      length(google_bigquery_dataset.managed["raw_sakila"].access) == 2 &&
-      length(google_bigquery_dataset.managed["stg_sakila"].access) == 3 &&
+      length(google_bigquery_dataset.managed["raw_sakila"].access) == 3 &&
+      length(google_bigquery_dataset.managed["stg_sakila"].access) == 4 &&
       length([
         for grant in google_bigquery_dataset.managed["stg_sakila"].access : grant
         if grant.role == "READER" && grant.user_by_email == "dataform-runtime-dev@example-red-project.iam.gserviceaccount.com"
@@ -140,8 +153,8 @@ run "grants_both_mart_readers_only_to_staging" {
   # Mart runtime には staging の READER 権限だけが追加されることを保証する。
   assert {
     condition = (
-      length(google_bigquery_dataset.managed["raw_sakila"].access) == 2 &&
-      length(google_bigquery_dataset.managed["stg_sakila"].access) == 4 &&
+      length(google_bigquery_dataset.managed["raw_sakila"].access) == 3 &&
+      length(google_bigquery_dataset.managed["stg_sakila"].access) == 5 &&
       toset([
         for grant in google_bigquery_dataset.managed["stg_sakila"].access : grant.user_by_email
         if grant.role == "READER"

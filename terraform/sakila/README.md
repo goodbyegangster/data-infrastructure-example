@@ -2,7 +2,8 @@
 
 Dataform の検証に使う Sakila の主要エンティティを BigQuery へ投入する。
 
-投入先は Terraform が作成する `sakila_<suffix>_<environment>` データセットとなる。
+投入先は `deployments/raw_data/<environment>` の Terraform が作成する
+`raw_sakila_<suffix>_<environment>` データセットとなる。
 同名の既存テーブルは検証用データで置き換える。
 
 ## Requirements
@@ -13,11 +14,13 @@ Dataform の検証に使う Sakila の主要エンティティを BigQuery へ�
 
 ## Usage
 
+`terraform/` ディレクトリで実行する。
+
 ```bash
 make sakila-load
 ```
 
-既定では `config/dev.env.local` を使用する。別の設定を使う場合は、
+既定では `config/dev.env` を使用する。別の設定を使う場合は、
 `make sakila-load ENV_FILE=config/another.env.local` のように指定する。
 
 ## ER 図

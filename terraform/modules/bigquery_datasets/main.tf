@@ -14,11 +14,18 @@ resource "google_bigquery_dataset" "managed" {
   delete_contents_on_destroy = true
   deletion_policy            = "DELETE"
 
+  # Dataset が属する Google Project の全 Owner に管理権限を付与する。
+  access {
+    role          = "OWNER"
+    special_group = "projectOwners"
+  }
+
   access {
     role          = "OWNER"
     user_by_email = var.owner_email
   }
 
+  # Dataform runtime に指定した権限を付与する。
   access {
     role          = each.value.runtime_role
     user_by_email = var.dataform_runtime_email
