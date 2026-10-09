@@ -70,6 +70,16 @@ make terraform-raw-data-plan
 make terraform-raw-data-apply
 ```
 
+### 4. sakila
+
+raw データセットに、検証用の sakila テーブル一式を作成する。
+
+```sh
+make sakila-load
+```
+
+[sakila](./sakila/README.md)
+
 ### 9. cleanup
 
 #### (1) terraform destroy

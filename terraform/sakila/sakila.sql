@@ -2,6 +2,132 @@
 SET @@dataset_project_id = @project_id;
 SET @@dataset_id = @dataset_id;
 
+-- 国テーブルを作成。
+CREATE OR REPLACE TABLE country (
+    country_id INT64 OPTIONS (description = "国ID"),
+    country STRING OPTIONS (description = "国名"),
+    last_update DATETIME OPTIONS (description = "最終更新日時"),
+    PRIMARY KEY (country_id) NOT ENFORCED
+)
+OPTIONS (description = "国")
+AS
+SELECT * FROM UNNEST([
+    STRUCT(1 AS country_id, "Japan" AS country, DATETIME '2006-02-15 04:44:00' AS last_update),
+    (2, "Canada", DATETIME '2006-02-15 04:44:00'),
+    (3, "Australia", DATETIME '2006-02-15 04:44:00')
+]);
+
+-- 都市テーブルを作成。
+CREATE OR REPLACE TABLE city (
+    city_id INT64 OPTIONS (description = "都市ID"),
+    city STRING OPTIONS (description = "都市名"),
+    country_id INT64 OPTIONS (description = "国ID"),
+    last_update DATETIME OPTIONS (description = "最終更新日時"),
+    PRIMARY KEY (city_id) NOT ENFORCED
+)
+OPTIONS (description = "都市")
+AS
+SELECT * FROM UNNEST([
+    STRUCT(1 AS city_id, "Tokyo" AS city, 1 AS country_id, DATETIME '2006-02-15 04:45:25' AS last_update),
+    (2, "Vancouver", 2, DATETIME '2006-02-15 04:45:25'),
+    (3, "Brisbane", 3, DATETIME '2006-02-15 04:45:25')
+]);
+
+-- 顧客・スタッフ・店舗から参照する住所テーブルを作成。
+CREATE OR REPLACE TABLE address (
+    address_id INT64 OPTIONS (description = "住所ID"),
+    address STRING OPTIONS (description = "住所"),
+    address2 STRING OPTIONS (description = "住所の補足"),
+    district STRING OPTIONS (description = "地域"),
+    city_id INT64 OPTIONS (description = "都市ID"),
+    postal_code STRING OPTIONS (description = "郵便番号"),
+    phone STRING OPTIONS (description = "電話番号"),
+    last_update DATETIME OPTIONS (description = "最終更新日時"),
+    PRIMARY KEY (address_id) NOT ENFORCED
+)
+OPTIONS (description = "住所")
+AS
+SELECT * FROM UNNEST([
+    STRUCT(
+        1 AS address_id, "1 Sample Street" AS address, CAST(NULL AS STRING) AS address2,
+        "British Columbia" AS district, 2 AS city_id, "V6B 1A1" AS postal_code,
+        "16045550101" AS phone, DATETIME '2006-02-15 04:45:30' AS last_update
+    ),
+    (2, "2 Sample Street", NULL, "Queensland", 3, "4000", "61755550102", DATETIME '2006-02-15 04:45:30'),
+    (3, "3 Sample Street", NULL, "British Columbia", 2, "V6B 1A2", "16045550103", DATETIME '2006-02-15 04:45:30'),
+    (4, "4 Sample Street", NULL, "Queensland", 3, "4001", "61755550104", DATETIME '2006-02-15 04:45:30'),
+    (5, "5 Sample Street", NULL, "Tokyo", 1, "1000001", "81355550105", DATETIME '2006-02-15 04:45:30'),
+    (6, "6 Sample Street", NULL, "Tokyo", 1, "1000002", "81355550106", DATETIME '2006-02-15 04:45:30'),
+    (7, "7 Sample Street", NULL, "Tokyo", 1, "1000003", "81355550107", DATETIME '2006-02-15 04:45:30'),
+    (8, "8 Sample Street", NULL, "Queensland", 3, "4002", "61755550108", DATETIME '2006-02-15 04:45:30'),
+    (9, "9 Sample Street", NULL, "Tokyo", 1, "1000004", "81355550109", DATETIME '2006-02-15 04:45:30'),
+    (10, "10 Sample Street", NULL, "Queensland", 3, "4003", "61755550110", DATETIME '2006-02-15 04:45:30'),
+    (11, "11 Sample Street", NULL, "Tokyo", 1, "1000005", "81355550111", DATETIME '2006-02-15 04:45:30'),
+    (12, "12 Sample Street", NULL, "Queensland", 3, "4004", "61755550112", DATETIME '2006-02-15 04:45:30'),
+    (13, "13 Sample Street", NULL, "Tokyo", 1, "1000006", "81355550113", DATETIME '2006-02-15 04:45:30'),
+    (14, "14 Sample Street", NULL, "Queensland", 3, "4005", "61755550114", DATETIME '2006-02-15 04:45:30')
+]);
+
+-- 映画の言語テーブルを作成。
+CREATE OR REPLACE TABLE language (
+    language_id INT64 OPTIONS (description = "言語ID"),
+    name STRING OPTIONS (description = "言語名"),
+    last_update DATETIME OPTIONS (description = "最終更新日時"),
+    PRIMARY KEY (language_id) NOT ENFORCED
+)
+OPTIONS (description = "言語")
+AS
+SELECT * FROM UNNEST([
+    STRUCT(1 AS language_id, "English" AS name, DATETIME '2006-02-15 05:02:19' AS last_update),
+    (2, "Italian", DATETIME '2006-02-15 05:02:19'),
+    (3, "Japanese", DATETIME '2006-02-15 05:02:19'),
+    (4, "Mandarin", DATETIME '2006-02-15 05:02:19'),
+    (5, "French", DATETIME '2006-02-15 05:02:19'),
+    (6, "German", DATETIME '2006-02-15 05:02:19')
+]);
+
+-- 店舗テーブルを作成。staff との循環参照は全テーブル作成後に設定する。
+CREATE OR REPLACE TABLE store (
+    store_id INT64 OPTIONS (description = "店舗ID"),
+    manager_staff_id INT64 OPTIONS (description = "店長のスタッフID"),
+    address_id INT64 OPTIONS (description = "住所ID"),
+    last_update DATETIME OPTIONS (description = "最終更新日時"),
+    PRIMARY KEY (store_id) NOT ENFORCED
+)
+OPTIONS (description = "店舗")
+AS
+SELECT * FROM UNNEST([
+    STRUCT(1 AS store_id, 1 AS manager_staff_id, 1 AS address_id, DATETIME '2006-02-15 04:57:12' AS last_update),
+    (2, 2, 2, DATETIME '2006-02-15 04:57:12')
+]);
+
+-- スタッフテーブルを作成。
+CREATE OR REPLACE TABLE staff (
+    staff_id INT64 OPTIONS (description = "スタッフID"),
+    first_name STRING OPTIONS (description = "名"),
+    last_name STRING OPTIONS (description = "姓"),
+    address_id INT64 OPTIONS (description = "住所ID"),
+    picture BYTES OPTIONS (description = "写真"),
+    email STRING OPTIONS (description = "メールアドレス"),
+    store_id INT64 OPTIONS (description = "所属店舗ID"),
+    active BOOL OPTIONS (description = "有効状態"),
+    username STRING OPTIONS (description = "ユーザー名"),
+    password STRING OPTIONS (description = "パスワードハッシュ"),
+    last_update DATETIME OPTIONS (description = "最終更新日時"),
+    PRIMARY KEY (staff_id) NOT ENFORCED
+)
+OPTIONS (description = "スタッフ")
+AS
+SELECT * FROM UNNEST([
+    STRUCT(
+        1 AS staff_id, "Mike" AS first_name, "Hillyer" AS last_name, 3 AS address_id,
+        CAST(NULL AS BYTES) AS picture, "mike@example.org" AS email, 1 AS store_id,
+        TRUE AS active, "Mike" AS username, CAST(NULL AS STRING) AS password,
+        DATETIME '2006-02-15 04:57:16' AS last_update
+    ),
+    (2, "Jon", "Stephens", 4, NULL, "jon@example.org", 2, TRUE, "Jon", NULL, DATETIME '2006-02-15 04:57:16')
+]);
+
 -- 出演者テーブルを作成。
 CREATE OR REPLACE TABLE actor (
     actor_id INT64 OPTIONS (description = "出演者ID"),
@@ -155,18 +281,23 @@ SELECT * FROM UNNEST([
     )
 ]);
 
+-- 映画から全文検索用テーブルを再作成し、ロード時点の内容を同期する。
+CREATE OR REPLACE TABLE film_text (
+    film_id INT64 OPTIONS (description = "映画ID"),
+    title STRING OPTIONS (description = "タイトル"),
+    description STRING OPTIONS (description = "説明"),
+    PRIMARY KEY (film_id) NOT ENFORCED
+)
+OPTIONS (description = "映画のタイトルと説明")
+AS
+SELECT film_id, title, description FROM film;
+
 -- 映画出演者テーブルを作成。
 CREATE OR REPLACE TABLE film_actor (
     actor_id INT64 OPTIONS (description = "出演者ID"),
     film_id INT64 OPTIONS (description = "映画ID"),
     last_update DATETIME OPTIONS (description = "最終更新日時"),
-    PRIMARY KEY (actor_id, film_id) NOT ENFORCED,
-    CONSTRAINT fk_film_actor_actor FOREIGN KEY (actor_id)
-        REFERENCES actor (actor_id)
-        NOT ENFORCED,
-    CONSTRAINT fk_film_actor_film FOREIGN KEY (film_id)
-        REFERENCES film (film_id)
-        NOT ENFORCED
+    PRIMARY KEY (actor_id, film_id) NOT ENFORCED
 )
 OPTIONS (
     description = "映画出演者"
@@ -204,13 +335,7 @@ CREATE OR REPLACE TABLE film_category (
     film_id INT64 OPTIONS (description = "映画ID"),
     category_id INT64 OPTIONS (description = "カテゴリID"),
     last_update DATETIME OPTIONS (description = "最終更新日時"),
-    PRIMARY KEY (film_id, category_id) NOT ENFORCED,
-    CONSTRAINT fk_film_category_film FOREIGN KEY (film_id)
-        REFERENCES film (film_id)
-        NOT ENFORCED,
-    CONSTRAINT fk_film_category_category FOREIGN KEY (category_id)
-        REFERENCES category (category_id)
-        NOT ENFORCED
+    PRIMARY KEY (film_id, category_id) NOT ENFORCED
 )
 OPTIONS (
     description = "映画カテゴリ"
@@ -242,7 +367,7 @@ CREATE OR REPLACE TABLE customer (
     email STRING OPTIONS (description = "メールアドレス"),
     address_id INT64 OPTIONS (description = "住所ID"),
     active BOOL OPTIONS (description = "有効状態"),
-    create_date DATE OPTIONS (description = "登録日"),
+    create_date DATETIME OPTIONS (description = "登録日"),
     last_update DATETIME OPTIONS (description = "最終更新日時"),
     PRIMARY KEY (customer_id) NOT ENFORCED
 )
@@ -257,7 +382,7 @@ SELECT * FROM UNNEST([
         "MARY" AS first_name,
         "SMITH" AS last_name,
         "MARY.SMITH@example.org" AS email, 5 AS address_id, TRUE AS active,
-        DATE '2006-02-14' AS create_date,
+        DATETIME '2006-02-14 00:00:00' AS create_date,
         DATETIME '2006-02-15 04:57:20' AS last_update
     ),
     (
@@ -268,7 +393,7 @@ SELECT * FROM UNNEST([
         "PATRICIA.JOHNSON@example.org",
         6,
         TRUE,
-        DATE '2006-02-14',
+        DATETIME '2006-02-14 00:00:00',
         DATETIME '2006-02-15 04:57:20'
     ),
     (
@@ -279,7 +404,7 @@ SELECT * FROM UNNEST([
         "LINDA.WILLIAMS@example.org",
         7,
         TRUE,
-        DATE '2006-02-14',
+        DATETIME '2006-02-14 00:00:00',
         DATETIME '2006-02-15 04:57:20'
     ),
     (
@@ -290,7 +415,7 @@ SELECT * FROM UNNEST([
         "BARBARA.JONES@example.org",
         8,
         TRUE,
-        DATE '2006-02-14',
+        DATETIME '2006-02-14 00:00:00',
         DATETIME '2006-02-15 04:57:20'
     ),
     (
@@ -301,7 +426,7 @@ SELECT * FROM UNNEST([
         "ELIZABETH.BROWN@example.org",
         9,
         TRUE,
-        DATE '2006-02-14',
+        DATETIME '2006-02-14 00:00:00',
         DATETIME '2006-02-15 04:57:20'
     ),
     (
@@ -312,7 +437,7 @@ SELECT * FROM UNNEST([
         "JENNIFER.DAVIS@example.org",
         10,
         TRUE,
-        DATE '2006-02-14',
+        DATETIME '2006-02-14 00:00:00',
         DATETIME '2006-02-15 04:57:20'
     ),
     (
@@ -323,7 +448,7 @@ SELECT * FROM UNNEST([
         "MARIA.MILLER@example.org",
         11,
         TRUE,
-        DATE '2006-02-14',
+        DATETIME '2006-02-14 00:00:00',
         DATETIME '2006-02-15 04:57:20'
     ),
     (
@@ -334,7 +459,7 @@ SELECT * FROM UNNEST([
         "SUSAN.WILSON@example.org",
         12,
         TRUE,
-        DATE '2006-02-14',
+        DATETIME '2006-02-14 00:00:00',
         DATETIME '2006-02-15 04:57:20'
     ),
     (
@@ -345,7 +470,7 @@ SELECT * FROM UNNEST([
         "MARGARET.MOORE@example.org",
         13,
         TRUE,
-        DATE '2006-02-14',
+        DATETIME '2006-02-14 00:00:00',
         DATETIME '2006-02-15 04:57:20'
     ),
     (
@@ -356,7 +481,7 @@ SELECT * FROM UNNEST([
         "DOROTHY.TAYLOR@example.org",
         14,
         TRUE,
-        DATE '2006-02-14',
+        DATETIME '2006-02-14 00:00:00',
         DATETIME '2006-02-15 04:57:20'
     )
 ]);
@@ -367,10 +492,7 @@ CREATE OR REPLACE TABLE inventory (
     film_id INT64 OPTIONS (description = "映画ID"),
     store_id INT64 OPTIONS (description = "店舗ID"),
     last_update DATETIME OPTIONS (description = "最終更新日時"),
-    PRIMARY KEY (inventory_id) NOT ENFORCED,
-    CONSTRAINT fk_inventory_film FOREIGN KEY (film_id)
-        REFERENCES film (film_id)
-        NOT ENFORCED
+    PRIMARY KEY (inventory_id) NOT ENFORCED
 )
 OPTIONS (
     description = "在庫"
@@ -405,13 +527,7 @@ CREATE OR REPLACE TABLE rental (
     return_date DATETIME OPTIONS (description = "返却日時"),
     staff_id INT64 OPTIONS (description = "スタッフID"),
     last_update DATETIME OPTIONS (description = "最終更新日時"),
-    PRIMARY KEY (rental_id) NOT ENFORCED,
-    CONSTRAINT fk_rental_inventory FOREIGN KEY (inventory_id)
-        REFERENCES inventory (inventory_id)
-        NOT ENFORCED,
-    CONSTRAINT fk_rental_customer FOREIGN KEY (customer_id)
-        REFERENCES customer (customer_id)
-        NOT ENFORCED
+    PRIMARY KEY (rental_id) NOT ENFORCED
 )
 OPTIONS (
     description = "レンタル"
@@ -519,13 +635,7 @@ CREATE OR REPLACE TABLE payment (
     amount NUMERIC OPTIONS (description = "支払金額"),
     payment_date DATETIME OPTIONS (description = "支払日時"),
     last_update DATETIME OPTIONS (description = "最終更新日時"),
-    PRIMARY KEY (payment_id) NOT ENFORCED,
-    CONSTRAINT fk_payment_customer FOREIGN KEY (customer_id)
-        REFERENCES customer (customer_id)
-        NOT ENFORCED,
-    CONSTRAINT fk_payment_rental FOREIGN KEY (rental_id)
-        REFERENCES rental (rental_id)
-        NOT ENFORCED
+    PRIMARY KEY (payment_id) NOT ENFORCED
 )
 OPTIONS (
     description = "支払い"
@@ -624,59 +734,318 @@ SELECT * FROM UNNEST([
     )
 ]);
 
--- film_actor が参照する actor_id / film_id に、参照先の欠けた孤立キーがないことを検証する。
+-- 循環参照を含め、全テーブルが存在する状態で外部キーを設定する。
+ALTER TABLE city
+ADD CONSTRAINT fk_city_country_id FOREIGN KEY (country_id)
+    REFERENCES country (country_id) NOT ENFORCED;
+
+ALTER TABLE address
+ADD CONSTRAINT fk_address_city_id FOREIGN KEY (city_id)
+    REFERENCES city (city_id) NOT ENFORCED;
+
+ALTER TABLE staff
+ADD CONSTRAINT fk_staff_address_id FOREIGN KEY (address_id)
+    REFERENCES address (address_id) NOT ENFORCED;
+
+ALTER TABLE staff
+ADD CONSTRAINT fk_staff_store_id FOREIGN KEY (store_id)
+    REFERENCES store (store_id) NOT ENFORCED;
+
+ALTER TABLE store
+ADD CONSTRAINT fk_store_address_id FOREIGN KEY (address_id)
+    REFERENCES address (address_id) NOT ENFORCED;
+
+ALTER TABLE store
+ADD CONSTRAINT fk_store_manager_staff_id FOREIGN KEY (manager_staff_id)
+    REFERENCES staff (staff_id) NOT ENFORCED;
+
+ALTER TABLE customer
+ADD CONSTRAINT fk_customer_address_id FOREIGN KEY (address_id)
+    REFERENCES address (address_id) NOT ENFORCED;
+
+ALTER TABLE customer
+ADD CONSTRAINT fk_customer_store_id FOREIGN KEY (store_id)
+    REFERENCES store (store_id) NOT ENFORCED;
+
+ALTER TABLE film
+ADD CONSTRAINT fk_film_language_id FOREIGN KEY (language_id)
+    REFERENCES language (language_id) NOT ENFORCED;
+
+ALTER TABLE film
+ADD CONSTRAINT fk_film_original_language_id FOREIGN KEY (original_language_id)
+    REFERENCES language (language_id) NOT ENFORCED;
+
+ALTER TABLE film_actor
+ADD CONSTRAINT fk_film_actor_actor_id FOREIGN KEY (actor_id)
+    REFERENCES actor (actor_id) NOT ENFORCED;
+
+ALTER TABLE film_actor
+ADD CONSTRAINT fk_film_actor_film_id FOREIGN KEY (film_id)
+    REFERENCES film (film_id) NOT ENFORCED;
+
+ALTER TABLE film_category
+ADD CONSTRAINT fk_film_category_film_id FOREIGN KEY (film_id)
+    REFERENCES film (film_id) NOT ENFORCED;
+
+ALTER TABLE film_category
+ADD CONSTRAINT fk_film_category_category_id FOREIGN KEY (category_id)
+    REFERENCES category (category_id) NOT ENFORCED;
+
+ALTER TABLE inventory
+ADD CONSTRAINT fk_inventory_film_id FOREIGN KEY (film_id)
+    REFERENCES film (film_id) NOT ENFORCED;
+
+ALTER TABLE inventory
+ADD CONSTRAINT fk_inventory_store_id FOREIGN KEY (store_id)
+    REFERENCES store (store_id) NOT ENFORCED;
+
+ALTER TABLE rental
+ADD CONSTRAINT fk_rental_inventory_id FOREIGN KEY (inventory_id)
+    REFERENCES inventory (inventory_id) NOT ENFORCED;
+
+ALTER TABLE rental
+ADD CONSTRAINT fk_rental_customer_id FOREIGN KEY (customer_id)
+    REFERENCES customer (customer_id) NOT ENFORCED;
+
+ALTER TABLE rental
+ADD CONSTRAINT fk_rental_staff_id FOREIGN KEY (staff_id)
+    REFERENCES staff (staff_id) NOT ENFORCED;
+
+ALTER TABLE payment
+ADD CONSTRAINT fk_payment_customer_id FOREIGN KEY (customer_id)
+    REFERENCES customer (customer_id) NOT ENFORCED;
+
+ALTER TABLE payment
+ADD CONSTRAINT fk_payment_rental_id FOREIGN KEY (rental_id)
+    REFERENCES rental (rental_id) NOT ENFORCED;
+
+ALTER TABLE payment
+ADD CONSTRAINT fk_payment_staff_id FOREIGN KEY (staff_id)
+    REFERENCES staff (staff_id) NOT ENFORCED;
+
+-- BigQuery の外部キーは強制されないため、全参照先の存在を検証する。
+-- city.country_id に、参照先の欠けた孤立キーがないことを検証する。
 ASSERT (
     SELECT COUNT(*) = 0
-    FROM film_actor AS fa
-    LEFT JOIN actor AS a ON fa.actor_id = a.actor_id
-    LEFT JOIN film AS f ON fa.film_id = f.film_id
-    WHERE a.actor_id IS NULL OR f.film_id IS NULL
-) AS "film_actor contains an orphan key"
-;
+    FROM city AS child
+    LEFT JOIN country AS parent ON child.country_id = parent.country_id
+    WHERE child.country_id IS NOT NULL AND parent.country_id IS NULL
+) AS "city contains an orphan country_id";
 
--- film_category が参照する film_id / category_id に、参照先の欠けた孤立キーがないことを検証する。
+-- address.city_id に、参照先の欠けた孤立キーがないことを検証する。
 ASSERT (
     SELECT COUNT(*) = 0
-    FROM film_category AS fc
-    LEFT JOIN film AS f ON fc.film_id = f.film_id
-    LEFT JOIN category AS c ON fc.category_id = c.category_id
-    WHERE f.film_id IS NULL OR c.category_id IS NULL
-) AS "film_category contains an orphan key"
-;
+    FROM address AS child
+    LEFT JOIN city AS parent ON child.city_id = parent.city_id
+    WHERE child.city_id IS NOT NULL AND parent.city_id IS NULL
+) AS "address contains an orphan city_id";
 
--- inventory が参照する film_id に、参照先の欠けた孤立キーがないことを検証する。
+-- staff.address_id に、参照先の欠けた孤立キーがないことを検証する。
 ASSERT (
     SELECT COUNT(*) = 0
-    FROM inventory AS i
-    LEFT JOIN film AS f ON i.film_id = f.film_id
-    WHERE f.film_id IS NULL
-) AS "inventory contains an orphan film_id"
-;
+    FROM staff AS child
+    LEFT JOIN address AS parent ON child.address_id = parent.address_id
+    WHERE child.address_id IS NOT NULL AND parent.address_id IS NULL
+) AS "staff contains an orphan address_id";
 
--- rental が参照する inventory_id / customer_id に、参照先の欠けた孤立キーがないことを検証する。
+-- staff.store_id に、参照先の欠けた孤立キーがないことを検証する。
 ASSERT (
     SELECT COUNT(*) = 0
-    FROM rental AS r
-    LEFT JOIN inventory AS i ON r.inventory_id = i.inventory_id
-    LEFT JOIN customer AS c ON r.customer_id = c.customer_id
-    WHERE i.inventory_id IS NULL OR c.customer_id IS NULL
-) AS "rental contains an orphan key"
-;
+    FROM staff AS child
+    LEFT JOIN store AS parent ON child.store_id = parent.store_id
+    WHERE child.store_id IS NOT NULL AND parent.store_id IS NULL
+) AS "staff contains an orphan store_id";
 
--- payment が参照する customer_id / rental_id に、参照先の欠けた孤立キーがないことを検証する。
+-- store.address_id に、参照先の欠けた孤立キーがないことを検証する。
 ASSERT (
     SELECT COUNT(*) = 0
-    FROM payment AS p
-    LEFT JOIN customer AS c ON p.customer_id = c.customer_id
-    LEFT JOIN rental AS r ON p.rental_id = r.rental_id
-    WHERE c.customer_id IS NULL OR r.rental_id IS NULL
-) AS "payment contains an orphan key"
-;
+    FROM store AS child
+    LEFT JOIN address AS parent ON child.address_id = parent.address_id
+    WHERE child.address_id IS NOT NULL AND parent.address_id IS NULL
+) AS "store contains an orphan address_id";
 
--- PRIMARY KEYとして宣言した列にNULLまたは重複がないことを検証する。
+-- store.manager_staff_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM store AS child
+    LEFT JOIN staff AS parent ON child.manager_staff_id = parent.staff_id
+    WHERE child.manager_staff_id IS NOT NULL AND parent.staff_id IS NULL
+) AS "store contains an orphan manager_staff_id";
+
+-- customer.address_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM customer AS child
+    LEFT JOIN address AS parent ON child.address_id = parent.address_id
+    WHERE child.address_id IS NOT NULL AND parent.address_id IS NULL
+) AS "customer contains an orphan address_id";
+
+-- customer.store_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM customer AS child
+    LEFT JOIN store AS parent ON child.store_id = parent.store_id
+    WHERE child.store_id IS NOT NULL AND parent.store_id IS NULL
+) AS "customer contains an orphan store_id";
+
+-- film.language_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM film AS child
+    LEFT JOIN language AS parent ON child.language_id = parent.language_id
+    WHERE child.language_id IS NOT NULL AND parent.language_id IS NULL
+) AS "film contains an orphan language_id";
+
+-- film.original_language_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM film AS child
+    LEFT JOIN language AS parent ON child.original_language_id = parent.language_id
+    WHERE child.original_language_id IS NOT NULL AND parent.language_id IS NULL
+) AS "film contains an orphan original_language_id";
+
+-- film_actor.actor_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM film_actor AS child
+    LEFT JOIN actor AS parent ON child.actor_id = parent.actor_id
+    WHERE child.actor_id IS NOT NULL AND parent.actor_id IS NULL
+) AS "film_actor contains an orphan actor_id";
+
+-- film_actor.film_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM film_actor AS child
+    LEFT JOIN film AS parent ON child.film_id = parent.film_id
+    WHERE child.film_id IS NOT NULL AND parent.film_id IS NULL
+) AS "film_actor contains an orphan film_id";
+
+-- film_category.film_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM film_category AS child
+    LEFT JOIN film AS parent ON child.film_id = parent.film_id
+    WHERE child.film_id IS NOT NULL AND parent.film_id IS NULL
+) AS "film_category contains an orphan film_id";
+
+-- film_category.category_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM film_category AS child
+    LEFT JOIN category AS parent ON child.category_id = parent.category_id
+    WHERE child.category_id IS NOT NULL AND parent.category_id IS NULL
+) AS "film_category contains an orphan category_id";
+
+-- inventory.film_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM inventory AS child
+    LEFT JOIN film AS parent ON child.film_id = parent.film_id
+    WHERE child.film_id IS NOT NULL AND parent.film_id IS NULL
+) AS "inventory contains an orphan film_id";
+
+-- inventory.store_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM inventory AS child
+    LEFT JOIN store AS parent ON child.store_id = parent.store_id
+    WHERE child.store_id IS NOT NULL AND parent.store_id IS NULL
+) AS "inventory contains an orphan store_id";
+
+-- rental.inventory_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM rental AS child
+    LEFT JOIN inventory AS parent ON child.inventory_id = parent.inventory_id
+    WHERE child.inventory_id IS NOT NULL AND parent.inventory_id IS NULL
+) AS "rental contains an orphan inventory_id";
+
+-- rental.customer_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM rental AS child
+    LEFT JOIN customer AS parent ON child.customer_id = parent.customer_id
+    WHERE child.customer_id IS NOT NULL AND parent.customer_id IS NULL
+) AS "rental contains an orphan customer_id";
+
+-- rental.staff_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM rental AS child
+    LEFT JOIN staff AS parent ON child.staff_id = parent.staff_id
+    WHERE child.staff_id IS NOT NULL AND parent.staff_id IS NULL
+) AS "rental contains an orphan staff_id";
+
+-- payment.customer_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM payment AS child
+    LEFT JOIN customer AS parent ON child.customer_id = parent.customer_id
+    WHERE child.customer_id IS NOT NULL AND parent.customer_id IS NULL
+) AS "payment contains an orphan customer_id";
+
+-- payment.rental_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM payment AS child
+    LEFT JOIN rental AS parent ON child.rental_id = parent.rental_id
+    WHERE child.rental_id IS NOT NULL AND parent.rental_id IS NULL
+) AS "payment contains an orphan rental_id";
+
+-- payment.staff_id に、参照先の欠けた孤立キーがないことを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM payment AS child
+    LEFT JOIN staff AS parent ON child.staff_id = parent.staff_id
+    WHERE child.staff_id IS NOT NULL AND parent.staff_id IS NULL
+) AS "payment contains an orphan staff_id";
+
+-- 全テーブルの主キーに NULL または重複がないことを検証する。
 ASSERT (
     SELECT COUNT(*) = 0
     FROM (
+        SELECT 1 AS invalid_key
+        FROM country
+        GROUP BY country_id
+        HAVING country_id IS NULL OR COUNT(*) > 1
+
+        UNION ALL
+
+        SELECT 1 AS invalid_key
+        FROM city
+        GROUP BY city_id
+        HAVING city_id IS NULL OR COUNT(*) > 1
+
+        UNION ALL
+
+        SELECT 1 AS invalid_key
+        FROM address
+        GROUP BY address_id
+        HAVING address_id IS NULL OR COUNT(*) > 1
+
+        UNION ALL
+
+        SELECT 1 AS invalid_key
+        FROM language
+        GROUP BY language_id
+        HAVING language_id IS NULL OR COUNT(*) > 1
+
+        UNION ALL
+
+        SELECT 1 AS invalid_key
+        FROM store
+        GROUP BY store_id
+        HAVING store_id IS NULL OR COUNT(*) > 1
+
+        UNION ALL
+
+        SELECT 1 AS invalid_key
+        FROM staff
+        GROUP BY staff_id
+        HAVING staff_id IS NULL OR COUNT(*) > 1
+
+        UNION ALL
+
         SELECT 1 AS invalid_key
         FROM actor
         GROUP BY actor_id
@@ -684,59 +1053,77 @@ ASSERT (
 
         UNION ALL
 
-        SELECT 1
+        SELECT 1 AS invalid_key
         FROM category
         GROUP BY category_id
         HAVING category_id IS NULL OR COUNT(*) > 1
 
         UNION ALL
 
-        SELECT 1
+        SELECT 1 AS invalid_key
         FROM film
         GROUP BY film_id
         HAVING film_id IS NULL OR COUNT(*) > 1
 
         UNION ALL
 
-        SELECT 1
+        SELECT 1 AS invalid_key
+        FROM film_text
+        GROUP BY film_id
+        HAVING film_id IS NULL OR COUNT(*) > 1
+
+        UNION ALL
+
+        SELECT 1 AS invalid_key
         FROM film_actor
         GROUP BY actor_id, film_id
         HAVING actor_id IS NULL OR film_id IS NULL OR COUNT(*) > 1
 
         UNION ALL
 
-        SELECT 1
+        SELECT 1 AS invalid_key
         FROM film_category
         GROUP BY film_id, category_id
         HAVING film_id IS NULL OR category_id IS NULL OR COUNT(*) > 1
 
         UNION ALL
 
-        SELECT 1
+        SELECT 1 AS invalid_key
         FROM customer
         GROUP BY customer_id
         HAVING customer_id IS NULL OR COUNT(*) > 1
 
         UNION ALL
 
-        SELECT 1
+        SELECT 1 AS invalid_key
         FROM inventory
         GROUP BY inventory_id
         HAVING inventory_id IS NULL OR COUNT(*) > 1
 
         UNION ALL
 
-        SELECT 1
+        SELECT 1 AS invalid_key
         FROM rental
         GROUP BY rental_id
         HAVING rental_id IS NULL OR COUNT(*) > 1
 
         UNION ALL
 
-        SELECT 1
+        SELECT 1 AS invalid_key
         FROM payment
         GROUP BY payment_id
         HAVING payment_id IS NULL OR COUNT(*) > 1
     )
-) AS "a primary key contains NULL or duplicate values"
-;
+) AS "a primary key contains NULL or duplicate values";
+
+-- film_text がロード時点の film と一致することを検証する。
+ASSERT (
+    SELECT COUNT(*) = 0
+    FROM (
+        (SELECT film_id, title, description FROM film
+         EXCEPT DISTINCT SELECT film_id, title, description FROM film_text)
+        UNION ALL
+        (SELECT film_id, title, description FROM film_text
+         EXCEPT DISTINCT SELECT film_id, title, description FROM film)
+    )
+) AS "film_text differs from film";
