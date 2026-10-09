@@ -6,4 +6,3 @@
 config/*.env
 crash.*.log
 crash.log
-**/mart-red-reader.auto.tfvars

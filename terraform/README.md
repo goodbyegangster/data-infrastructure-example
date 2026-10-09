@@ -37,7 +37,15 @@ Terraform の実行。
 make terraform-configure
 ```
 
-#### (2) mart_red プロジェクト向けの実行
+#### (2) raw_data プロジェクト向けの実行
+
+```sh
+make terraform-raw-data-init
+make terraform-raw-data-plan
+make terraform-raw-data-apply
+```
+
+#### (3) mart_red プロジェクト向けの実行
 
 ```sh
 make terraform-mart-red-init
@@ -45,10 +53,19 @@ make terraform-mart-red-plan
 make terraform-mart-red-apply
 ```
 
-#### (3) raw_data プロジェクト向けの実行
+#### (4) mart_blue プロジェクト向けの実行
 
 ```sh
-make terraform-raw-data-init
+make terraform-mart-blue-init
+make terraform-mart-blue-plan
+make terraform-mart-blue-apply
+```
+
+#### (5) raw_data プロジェクト向けに再実行
+
+各 mart で作成された dataform サービスアカウントを、staging データセットの参照権限に追加する。
+
+```sh
 make terraform-raw-data-plan
 make terraform-raw-data-apply
 ```
@@ -57,7 +74,12 @@ make terraform-raw-data-apply
 
 #### (1) terraform destroy
 
+空文字の指定で raw_data を適用し、Mart runtime の読み取り権限を外す。
+その後、各 Mart と raw_data を削除する。
+Dataset 内のテーブルと Dataform Repository も削除される。
+
 ```sh
+make terraform-mart-blue-destroy
 make terraform-mart-red-destroy
 make terraform-raw-data-destroy
 ```

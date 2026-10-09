@@ -1,5 +1,12 @@
 # Google Cloud へ接続せず、Google Provider の schema を使って plan を検証する。
 mock_provider "google" {
+  # 参照元 Dataset を固定し、Google Cloud に接続せず配置先を確認する。
+  mock_data "google_bigquery_dataset" {
+    defaults = {
+      location = "asia-northeast1"
+    }
+  }
+
   # Dataform サービスエージェントの ID を組み立てる Project number を固定する。
   mock_data "google_project" {
     defaults = {
@@ -12,10 +19,12 @@ mock_provider "google" {
 mock_provider "google-beta" {}
 
 variables {
-  project_id  = "example-project"
-  location    = "asia-northeast1"
-  environment = "dev"
-  suffix      = "sample"
+  project_id                  = "example-blue-project"
+  location                    = "asia-northeast1"
+  environment                 = "dev"
+  suffix                      = "sample"
+  raw_data_project_id         = "example-raw-project"
+  raw_data_staging_dataset_id = "stg_sakila_sample_dev"
 }
 
 # Dataform runtime と BigQuery Dataset Owner 用 Service Account の構成を検証する。
@@ -68,15 +77,4 @@ run "rejects_environment_too_long_for_service_account_id" {
   }
 
   expect_failures = [var.environment]
-}
-
-# Mart Blue の参照権限に不正なメールアドレスを設定できないことを検証する。
-run "rejects_invalid_mart_blue_runtime_email" {
-  command = plan
-
-  variables {
-    mart_blue_runtime_service_account_email = "invalid-email"
-  }
-
-  expect_failures = [var.mart_blue_runtime_service_account_email]
 }

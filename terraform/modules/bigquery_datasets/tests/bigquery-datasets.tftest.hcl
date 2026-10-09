@@ -115,3 +115,41 @@ run "grants_additional_reader_only_to_staging" {
     error_message = "The additional runtime must receive only READER access to staging."
   }
 }
+
+# Red と Blue の runtime が同時に staging を参照できることを検証する。
+run "grants_both_mart_readers_only_to_staging" {
+  command = plan
+
+  variables {
+    datasets = {
+      raw_sakila = {
+        description  = "Sakila raw data."
+        runtime_role = "READER"
+      }
+      stg_sakila = {
+        description  = "Sakila staging data."
+        runtime_role = "WRITER"
+        reader_emails = [
+          "dataform-runtime-dev@example-red-project.iam.gserviceaccount.com",
+          "dataform-runtime-dev@example-blue-project.iam.gserviceaccount.com",
+        ]
+      }
+    }
+  }
+
+  # Mart runtime には staging の READER 権限だけが追加されることを保証する。
+  assert {
+    condition = (
+      length(google_bigquery_dataset.managed["raw_sakila"].access) == 2 &&
+      length(google_bigquery_dataset.managed["stg_sakila"].access) == 4 &&
+      toset([
+        for grant in google_bigquery_dataset.managed["stg_sakila"].access : grant.user_by_email
+        if grant.role == "READER"
+        ]) == toset([
+        "dataform-runtime-dev@example-red-project.iam.gserviceaccount.com",
+        "dataform-runtime-dev@example-blue-project.iam.gserviceaccount.com",
+      ])
+    )
+    error_message = "The additional runtime must receive only READER access to staging."
+  }
+}

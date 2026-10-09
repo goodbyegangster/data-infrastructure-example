@@ -49,15 +49,29 @@ variable "suffix" {
 }
 
 variable "mart_red_runtime_service_account_email" {
-  description = "staging の読み取りを許可する Mart Red runtime Service Account。Mart Red 作成後に指定する。"
+  description = "staging の読み取りを許可する Mart Red runtime Service Account。初回作成時は null または空文字で権限付与を省略する。"
   type        = string
   default     = null
 
   validation {
-    condition = var.mart_red_runtime_service_account_email == null ? true : can(regex(
+    condition = var.mart_red_runtime_service_account_email == null || var.mart_red_runtime_service_account_email == "" ? true : can(regex(
       "^[a-z][a-z0-9-]{4,28}[a-z0-9]@[a-z][a-z0-9-]{4,28}[a-z0-9]\\.iam\\.gserviceaccount\\.com$",
       var.mart_red_runtime_service_account_email
     ))
-    error_message = "mart_red_runtime_service_account_email must be a service account email or null."
+    error_message = "mart_red_runtime_service_account_email must be a service account email, null, or an empty string."
+  }
+}
+
+variable "mart_blue_runtime_service_account_email" {
+  description = "staging の読み取りを許可する Mart Blue runtime Service Account。初回作成時は null または空文字で権限付与を省略する。"
+  type        = string
+  default     = null
+
+  validation {
+    condition = var.mart_blue_runtime_service_account_email == null || var.mart_blue_runtime_service_account_email == "" ? true : can(regex(
+      "^[a-z][a-z0-9-]{4,28}[a-z0-9]@[a-z][a-z0-9-]{4,28}[a-z0-9]\\.iam\\.gserviceaccount\\.com$",
+      var.mart_blue_runtime_service_account_email
+    ))
+    error_message = "mart_blue_runtime_service_account_email must be a service account email, null, or an empty string."
   }
 }

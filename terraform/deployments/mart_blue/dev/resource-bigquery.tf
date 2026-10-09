@@ -1,4 +1,4 @@
-# Raw Data Project で使用する BigQuery Dataset を作成する。
+# Mart Blue Project で使用する BigQuery Dataset を作成する。
 module "bigquery_datasets" {
   depends_on = [google_project_service.project["bigquery.googleapis.com"]]
 
@@ -12,17 +12,9 @@ module "bigquery_datasets" {
   dataform_runtime_email = google_service_account.dataform_runtime.email
 
   datasets = {
-    raw_sakila = {
-      description  = "Sakila raw data."
-      runtime_role = "READER"
-    }
-    stg_sakila = {
-      description  = "Sakila staging data."
+    mart_blue = {
+      description  = "Sakila mart blue data."
       runtime_role = "WRITER"
-      reader_emails = compact([
-        var.mart_red_runtime_service_account_email,
-        var.mart_blue_runtime_service_account_email,
-      ])
     }
     dataform_assertions = {
       description  = "Dataform assertion data."

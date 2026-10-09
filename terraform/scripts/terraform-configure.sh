@@ -103,6 +103,7 @@ write_variable_values() {
 	temporary_file="$(mktemp "${terraform_variables_file}.XXXXXX")" \
 		|| die "Failed to create a temporary variable file."
 
+    # 共通
 	if ! printf '%s\n' \
 		"${GENERATED_FILE_HEADER}" \
 		"project_id  = \"${terraform_project_id}\"" \
@@ -113,12 +114,23 @@ write_variable_values() {
 		die "Failed to write the Terraform variable values."
 	fi
 
-	if [[ "${deployment}" == "mart_red" ]]; then
+	# staging dataset を参照する、各 mart の dataform サービスアカウント
+	if [[ "${deployment}" == "raw_data" ]]; then
+		if ! printf '%s\n' \
+			"mart_red_runtime_service_account_email = \"dataform-runtime-${ENVIRONMENT}@${PROJECT_ID_MART_RED}.iam.gserviceaccount.com\"" \
+			"mart_blue_runtime_service_account_email = \"dataform-runtime-${ENVIRONMENT}@${PROJECT_ID_MART_BLUE}.iam.gserviceaccount.com\"" >>"${temporary_file}"; then
+			rm -f -- "${temporary_file}"
+			die "Failed to write the Mart runtime configuration."
+		fi
+	fi
+
+	# 各 mart が参照する staging dataset
+	if [[ "${deployment}" == "mart_red" || "${deployment}" == "mart_blue" ]]; then
 		if ! printf '%s\n' \
 			"raw_data_project_id = \"${PROJECT_ID_RAW_DATA}\"" \
 			"raw_data_staging_dataset_id = \"stg_sakila_${SUFFIX//-/_}_${ENVIRONMENT//-/_}\"" >>"${temporary_file}"; then
 			rm -f -- "${temporary_file}"
-			die "Failed to write the Mart Red staging configuration."
+			die "Failed to write the ${deployment} staging configuration."
 		fi
 	fi
 
