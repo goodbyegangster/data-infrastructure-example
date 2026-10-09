@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# env fileから対象を特定し、Dataform検証用のSakilaテーブルをBigQueryへ投入する。
+# raw sakila dataset にテーブルを作成し、データを投入する。
 #
 # Requirement Bash Version
 #   GNU Bash 4.4 or later
@@ -38,7 +38,7 @@ Exit status:
 USAGE
 }
 
-# Sakilaテーブルを既存の検証用datasetへ投入する。
+# テーブルを作成し、データを投入する。
 main() {
 	local dataset_id
 	local query_location
@@ -79,7 +79,7 @@ main() {
 
 	log warning "Existing Sakila tables will be replaced."
 
-	# 対象datasetにある同名テーブルを検証用データで置き換える。
+	# sql ファイルを実行。
 	bq --project_id="${PROJECT_ID_RAW_DATA}" --location="${query_location}" query \
 		--parameter="project_id:STRING:${PROJECT_ID_RAW_DATA}" \
 		--parameter="dataset_id:STRING:${dataset_id}" \
