@@ -37,7 +37,7 @@ variables {
   raw_data_staging_dataset_id = "stg_sakila_sample_dev"
 }
 
-# Dataform runtime Service Account へ BigQuery job の実行権限が付与されることを検証する。
+# Dataform runtime サービスアカウントへ BigQuery job と developer connect 利用権限が付与されることを検証する。
 run "grants_bigquery_job_permission_to_runtime" {
   command = plan
 
@@ -47,13 +47,31 @@ run "grants_bigquery_job_permission_to_runtime" {
     error_message = "The Dataform runtime service account must have the BigQuery Job User role."
   }
 
-  # 権限の付与先が Dataform runtime Service Account だけであることを保証する。
+  # 権限の付与先が Dataform runtime サービスアカウントだけであることを保証する。
   assert {
     condition = (
       google_project_iam_member.dataform_runtime_job_user.member ==
       google_service_account.dataform_runtime.member
     )
     error_message = "The BigQuery Job User role must be granted to the Dataform runtime service account."
+  }
+
+  # developer connect 利用権限の2つが付与されることを保証する。
+  assert {
+    condition = (
+      toset([
+        for grant in google_project_iam_member.dataform_runtime_git_access : grant.role
+        ]) == toset([
+        "roles/developerconnect.gitProxyUser",
+        "roles/developerconnect.tokenAccessor",
+      ]) &&
+      alltrue([
+        for grant in google_project_iam_member.dataform_runtime_git_access :
+        grant.project == var.project_id &&
+        grant.member == "serviceAccount:dataform-runtime-dev@example-blue-project.iam.gserviceaccount.com"
+      ])
+    )
+    error_message = "Developer Connect roles must be granted to the runtime service account in the target project."
   }
 }
 
@@ -98,7 +116,7 @@ run "grants_runtime_access_to_dataform_service_agent" {
     error_message = "Runtime access must be granted to the target project's Dataform service agent."
   }
 
-  # Project 全体ではなく対象 runtime Service Account 上で権限を管理することを保証する。
+  # Project 全体ではなく対象 Dataform runtime サービスアカウント上で権限を管理することを保証する。
   assert {
     condition = alltrue([
       for service_account_id in [

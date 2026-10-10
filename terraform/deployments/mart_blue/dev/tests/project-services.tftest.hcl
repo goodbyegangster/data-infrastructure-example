@@ -36,6 +36,7 @@ run "configures_workload_services" {
     condition = toset(keys(google_project_service.project)) == toset([
       "bigquery.googleapis.com",
       "dataform.googleapis.com",
+      "developerconnect.googleapis.com",
       "iam.googleapis.com",
       "secretmanager.googleapis.com",
       "workloadidentity.googleapis.com",

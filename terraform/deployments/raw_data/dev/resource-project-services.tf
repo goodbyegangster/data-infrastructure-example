@@ -3,6 +3,7 @@ resource "google_project_service" "project" {
   for_each = toset([
     "bigquery.googleapis.com",
     "dataform.googleapis.com",
+    "developerconnect.googleapis.com",
     "iam.googleapis.com",
     "secretmanager.googleapis.com",
     "workloadidentity.googleapis.com",

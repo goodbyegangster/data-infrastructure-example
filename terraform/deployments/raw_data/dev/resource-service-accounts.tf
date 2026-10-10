@@ -1,4 +1,4 @@
-# BigQuery dataset の OWNER となる Service Account を作成する。
+# BigQuery dataset の OWNER となるサービスアカウントを作成する。
 resource "google_service_account" "data_platform_admin" {
   depends_on = [google_project_service.project["iam.googleapis.com"]]
 
@@ -10,7 +10,7 @@ resource "google_service_account" "data_platform_admin" {
   deletion_policy = "DELETE"
 }
 
-# Dataform workflow を実行するための専用 Service Account を作成する。
+# Dataform workflow を実行するためのサービスアカウントを作成する。
 resource "google_service_account" "dataform_runtime" {
   depends_on = [google_project_service.project["iam.googleapis.com"]]
 
@@ -22,7 +22,7 @@ resource "google_service_account" "dataform_runtime" {
   deletion_policy = "DELETE"
 }
 
-# Dataform サービスエージェントを生成する。
+# Dataform サービスエージェントを明示的に生成する。
 resource "google_workload_identity_service_agent" "dataform_service_agent" {
   depends_on = [
     google_project_service.project["dataform.googleapis.com"],
