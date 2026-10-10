@@ -1,3 +1,6 @@
 [submodule "dataform/raw-data"]
 	path = dataform/raw-data
 	url = https://github.com/goodbyegangster/dataform-example-raw-data
+[submodule "dataform/template"]
+	path = dataform/template
+	url = https://github.com/goodbyegangster/dataform-example-template
