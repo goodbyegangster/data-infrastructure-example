@@ -19,10 +19,9 @@ resource "google_dataform_repository_release_config" "main" {
     assertion_schema = module.bigquery_datasets.dataset_ids["dataform_assertions"]
 
     vars = {
-      executionEnvironment = var.environment
-      sakilaProject        = var.project_id
-      sakilaDataset        = module.bigquery_datasets.dataset_ids["raw_sakila"]
-      sakilaStagingDataset = module.bigquery_datasets.dataset_ids["stg_sakila"]
+      environment    = var.environment
+      rawDataset     = module.bigquery_datasets.dataset_ids["raw_sakila"]
+      stagingDataset = module.bigquery_datasets.dataset_ids["stg_sakila"]
     }
   }
 }

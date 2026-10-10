@@ -63,7 +63,7 @@ run "configures_dataform_repository" {
     error_message = "The Dataform repository must use the runtime service account and FORCE deletion policy."
   }
 
-  # Release configuration が main branch と指定した BigQuery 出力先を使用することを保証する。
+  # Release configuration が main branch・BigQuery 出力先・Dataform と共通の変数名を使用することを保証する。
   assert {
     condition = (
       google_dataform_repository_release_config.main.git_commitish == "main" &&
@@ -73,9 +73,14 @@ run "configures_dataform_repository" {
       google_dataform_repository_release_config.main.code_compilation_config[0].default_schema ==
       module.bigquery_datasets.dataset_ids["stg_sakila"] &&
       google_dataform_repository_release_config.main.code_compilation_config[0].assertion_schema ==
-      module.bigquery_datasets.dataset_ids["dataform_assertions"]
+      module.bigquery_datasets.dataset_ids["dataform_assertions"] &&
+      google_dataform_repository_release_config.main.code_compilation_config[0].vars == tomap({
+        environment    = var.environment
+        rawDataset     = module.bigquery_datasets.dataset_ids["raw_sakila"]
+        stagingDataset = module.bigquery_datasets.dataset_ids["stg_sakila"]
+      })
     )
-    error_message = "The release configuration must compile main with the configured BigQuery settings."
+    error_message = "The release configuration must compile main with the configured BigQuery settings and shared Dataform variables."
   }
 
   # Workflow configuration が Release configuration と runtime Service Account を使用することを保証する。

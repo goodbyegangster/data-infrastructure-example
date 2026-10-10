@@ -107,10 +107,13 @@ run "compiles_from_raw_staging_into_red_mart" {
   # Raw Project の staging を入力として、Mart Red Project へ出力することを保証する。
   assert {
     condition = (
-      google_dataform_repository_release_config.main.code_compilation_config[0].vars["sakilaProject"] == var.raw_data_project_id &&
-      google_dataform_repository_release_config.main.code_compilation_config[0].vars["sakilaStagingDataset"] == var.raw_data_staging_dataset_id &&
-      google_dataform_repository_release_config.main.code_compilation_config[0].vars["martProject"] == var.project_id &&
-      google_dataform_repository_release_config.main.code_compilation_config[0].vars["martDataset"] == "mart_red_sample_dev"
+      google_dataform_repository_release_config.main.code_compilation_config[0].default_database == var.project_id &&
+      google_dataform_repository_release_config.main.code_compilation_config[0].vars == tomap({
+        environment    = var.environment
+        stagingProject = var.raw_data_project_id
+        stagingDataset = var.raw_data_staging_dataset_id
+        martDataset    = "mart_red_sample_dev"
+      })
     )
     error_message = "The release must read raw staging and write the red mart in their respective projects."
   }
